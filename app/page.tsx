@@ -17,11 +17,26 @@ import {
   type Connection,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { PokemonType } from '@/types/pokemon';
-import PokemonNode, { PokemonNodeType } from '@/components/PokemonNode';
-import PokemonAbilityNode, { PokemonAbilityNodeType } from '@/components/PokemonAbilityNode';
+import { 
+	type PokemonType 
+} from '@/types/pokemon';
+import
+PokemonNode, 
+{ 
+	type PokemonNodeType 
+} from '@/components/PokemonNode';
+import 
+PokemonAbilityNode,
+{ 
+	type PokemonAbilityNodeType 
+}
+from '@/components/PokemonAbilityNode';
+import pokemonSearchList from '@/data/pokemon.json'
+import PokemonSearchDialog from '@/components/PokemonSearchDialog';
 
-type AppNode = PokemonNodeType | PokemonAbilityNodeType;
+type AppNode = 
+	PokemonNodeType | 
+	PokemonAbilityNodeType;
 
 const nodeTypes = {
   pokemonNode: PokemonNode,
@@ -33,11 +48,7 @@ const initialEdges: Edge[] = [];
 export default function Page() {
   const [nodes, setNodes] = useState<AppNode[]>([]);
   const [edges, setEdges] = useState<Edge[]>(initialEdges);
-
-
-  useEffect(() => {
-    getMon();
-  }, []);
+	const [addMon, setAddMon] = useState(false);
 
 	const addAbilityNode = useCallback((id: string, url: string) => {
 		const abilityId = `${id}-${url}`;
@@ -63,8 +74,8 @@ export default function Page() {
 		});
 	}, []);
 
-	const getMon = useCallback(async () => {
-		const res = await fetch("https://pokeapi.co/api/v2/pokemon/pikachu");
+	const addPokemonNode = useCallback(async (name: string) => {
+		const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${name}`);
 		const data: PokemonType = await res.json();
 		const uuid = crypto.randomUUID();
 		setNodes(prev => [
@@ -117,13 +128,17 @@ export default function Page() {
 				orientation='horizontal'
 				/>
 				<Panel
-				position='bottom-right'
+				position='top-center'
 				>
-					<div className="mb-8">
-						<Button
-						onClick={getMon}
-						>Add</Button>
-					</div>
+					<Button
+					onClick={() => setAddMon(true)}
+					>Add</Button>
+					<PokemonSearchDialog 
+					open={addMon}
+					onOpenChange={() => setAddMon(prev => !prev)}
+					searchList={pokemonSearchList}	
+					onAdd={addPokemonNode}
+					/>
 				</Panel>
 			</ReactFlow>
     </div>

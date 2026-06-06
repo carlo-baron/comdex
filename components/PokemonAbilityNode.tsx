@@ -7,23 +7,11 @@ import {
   CardHeader,
   CardTitle,
 } from "./ui/card";
-
-export type AbilityEntryType = {
-  id: number;
-  name: string;
-  effect_entries: EffectEntryType[];
-};
-
-type EffectEntryType = {
-	short_effect: string;
-  language: {
-    name: string;
-  };
-};
+import { type AbilityEntryType } from '@/types/pokemon';
 
 export type PokemonAbilityNodeType = Node<{ url: string }, 'pokemonAbilityNode'>;
 
-export default function PokemonAbilityNode({ data }: NodeProps<PokemonAbilityNodeType>) {
+export default function PokemonAbilityNode({ selected, data }: NodeProps<PokemonAbilityNodeType>) {
   const [ability, setAbility] = useState<AbilityEntryType | null>(null);
 
   useEffect(() => {
@@ -40,6 +28,7 @@ export default function PokemonAbilityNode({ data }: NodeProps<PokemonAbilityNod
 
   return (
     <Card
+		className={selected ? `ring-2 ring-primary` : ''}
 		>
       <Handle type="target" position={Position.Left} />
       <CardHeader

@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from '@/components/ui/button';
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import {
   ReactFlow,
   applyNodeChanges,
@@ -50,8 +50,8 @@ export default function Page() {
   const [edges, setEdges] = useState<Edge[]>(initialEdges);
 	const [addMon, setAddMon] = useState(false);
 
-	const addAbilityNode = useCallback((id: string, url: string) => {
-		const abilityId = `${id}-${url}`;
+	const addAbilityNode = useCallback((id: string, urls: string[]) => {
+		const abilityId = `${id}-${urls}`;
 		setNodes(prev => {
 			if (prev.some(node => node.id === abilityId)) return prev;
 			const parent = prev.find(node => node.id === id);
@@ -63,7 +63,7 @@ export default function Page() {
 					id: abilityId,
 					type: 'pokemonAbilityNode',
 					position: { x: parentX + 200, y: parentY },
-					data: { url },
+					data: { urls },
 				},
 			];
 		});

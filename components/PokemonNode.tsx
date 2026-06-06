@@ -33,7 +33,7 @@ const NatureOptions = memo(() => (
 NatureOptions.displayName = 'NatureOptions';
 
 type PokemonNodeProps = {
-  onExpandAbility: (id: string, url: string) => void;
+  onExpandAbility: (id: string, urls: string[]) => void;
 } & PokemonType;
 
 export type PokemonNodeType = Node<PokemonNodeProps, 'pokemonNode'>;
@@ -118,7 +118,10 @@ const PokemonNode = memo(function PokemonNode({
       <CardContent>
         <div className="grid grid-cols-2 text-center">
           <h2 className="font-extrabold">Stats</h2>
-          <h2 className="font-extrabold">Abilities</h2>
+          <h2
+					className="font-extrabold"
+					onClick={() => data.onExpandAbility(id, data.abilities.map(ability => ability.ability.url))}
+					>Abilities</h2>
           <h2 className="font-extrabold">Moves</h2>
           <h2 className="font-extrabold">Items</h2>
           <h2 className="col-span-2 font-extrabold">Evolution</h2>

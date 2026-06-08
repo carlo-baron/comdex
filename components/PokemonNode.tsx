@@ -1,8 +1,8 @@
 "use client";
 import Image from 'next/image';
 import { Badge } from './ui/badge';
-import { useRef, useMemo, memo, useCallback, useState } from 'react';
-import { NodeProps, Node, Handle, Position } from '@xyflow/react';
+import { useEffect, useRef, useMemo, memo, useCallback, useState } from 'react';
+import { NodeProps, Node, Handle, Position, useReactFlow } from '@xyflow/react';
 import { Volume2 } from 'lucide-react';
 import { Input } from './ui/input';
 import {
@@ -34,7 +34,7 @@ NatureOptions.displayName = 'NatureOptions';
 
 type PokemonNodeProps = {
   onExpandAbility: (id: string, urls: string[]) => void;
-  onExpandStats: (id: string, stats: PokemonStatType[]) => void;
+  onExpandStats: (id: string, stats: PokemonStatType[], level: number, nature: NatureName) => void;
 } & PokemonType;
 
 export type PokemonNodeType = Node<PokemonNodeProps, 'pokemonNode'>;
@@ -47,6 +47,12 @@ const PokemonNode = memo(function PokemonNode({
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [nature, setNature] = useState<NatureName>('sassy');
   const [level, setLevel] = useState<number>(100);
+	const { updateNodeData } = useReactFlow();
+
+	useEffect(() => {
+		const statNodeId = `${id}-statNode`;
+		updateNodeData(statNodeId, { level, nature });
+	}, [level, nature, id, updateNodeData]);
 
   const handleCryClick = useCallback(() => {
     audioRef.current?.play();
@@ -126,7 +132,7 @@ const PokemonNode = memo(function PokemonNode({
         <div className="cursor-pointer nodrag grid grid-cols-2 text-center">
           <h2
             className="font-extrabold"
-            onClick={() => data.onExpandStats(id, data.stats)}
+            onClick={() => data.onExpandStats(id, data.stats, level, nature)}
           >
             Stats
             <Handle

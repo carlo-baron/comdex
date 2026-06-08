@@ -15,6 +15,7 @@ import {
 import StatRadarChart, { abbreviateStat } from './StatRadarChart';
 import { PokemonStatType } from '@/types/pokemon';
 import { NatureName } from '@/data/natures';
+import { natures } from '@/data/natures';
 
 export type PokemonStatProps = {
 	stats: PokemonStatType[],
@@ -25,7 +26,8 @@ export type PokemonStatProps = {
 export type PokemonStatNodeType = Node<PokemonStatProps, 'pokemonStatNode'>;
 
 export default function PokemonStatNode({ id, selected, data }: NodeProps<PokemonStatNodeType>) {
-  const [stats, setStats] = useState<PokemonStatType[]>(data.stats);
+	const [isAffected, setIsAffected] = useState(false);
+
 	const bst = useMemo(() => {
 		return data.stats.reduce((acc, val) => {
 			return acc + val.base_stat
@@ -33,9 +35,15 @@ export default function PokemonStatNode({ id, selected, data }: NodeProps<Pokemo
 	}, [data.stats]);
 	const statSliders = useMemo(() => 
 		data.stats.map((statItem, index) => (
-			<StatSliderItem key={index} stat={statItem} />
+			<StatSliderItem 
+			key={index}
+			stat={statItem}
+			level={data.level}
+			nature={data.nature}
+			isAffected={isAffected}
+			/>
 		)),
-	[data.stats]);
+	[data.stats, isAffected, data.nature, data.level]);
 
   return (
 		<Card className={`w-80 ${selected ? 'ring-2 ring-primary' : ''}`}>
@@ -51,7 +59,7 @@ export default function PokemonStatNode({ id, selected, data }: NodeProps<Pokemo
 			<CardContent>
 				<span className="flex gap-2 top">
 					<StatRadarChart
-					stats={stats}
+					stats={data.stats}
 					/>
 					<div className='flex-1 flex flex-col items-center justify-center'>
 						<p className="font-medium">BST</p>
@@ -60,7 +68,7 @@ export default function PokemonStatNode({ id, selected, data }: NodeProps<Pokemo
 				</span>
 				<span className="flex gap-2">
 					<p>Apply Level & Nature</p>
-					<Switch />
+					<Switch onCheckedChange={() => setIsAffected(prev => !prev)}/>
 				</span>
 				<section className="cursor-default nodrag sliders">
 				{statSliders}
@@ -76,6 +84,8 @@ const StatSliderItem = memo(function StatSliderItem(
 		level = 100,
 		iv = 0,
 		ev = 0,
+		nature,
+		isAffected = false
 	}
 	:
 	{
@@ -83,32 +93,53 @@ const StatSliderItem = memo(function StatSliderItem(
 		level: number;
 		iv: number;
 		ev: number;
+		nature: NatureName;
+		isAffected: boolean;
 	}
 ){
 
 	const min = useMemo(() => {
 		const value = Math.floor(
-			Math.floor(((2 * stat.base_stat + 0 + 0) * level) / 100) + 5
+			Math.floor(((2 * stat.base_stat + 0 + 0) * 100) / 100) + 5
 		);
 		return stat.stat.name === 'hp'
-			? Math.floor(((2 * stat.base_stat + 0 + 0) * level) / 100) + level + 10
+			? Math.floor(((2 * stat.base_stat + 0 + 0) * 100) / 100) + 100 + 10
 			: Math.floor(value * 0.9);
-	}, [stat, level]);
+	}, [stat]);
 
 	const max = useMemo(() => {
 		const value = Math.floor(
-			Math.floor(((2 * stat.base_stat + 31 + Math.floor(252 / 4)) * level) / 100) + 5
+			Math.floor(((2 * stat.base_stat + 31 + Math.floor(252 / 4)) * 100) / 100) + 5
 		);
 		return stat.stat.name === 'hp'
-			? Math.floor(((2 * stat.base_stat + 31 + Math.floor(252 / 4)) * level) / 100) + level + 10
+			? Math.floor(((2 * stat.base_stat + 31 + Math.floor(252 / 4)) * 100) / 100) + 100 + 10
 			: Math.floor(value * 1.1);
-	}, [stat, level]);
+	}, [stat]);
+
+	const statVal = useMemo(() => {
+		if(!isAffected) return stat.base_stat;
+
+		const natureObj = natures.find(n => n.name === nature);
+		const statName = stat.stat.name;
+
+		const natureMult = 
+			natureObj?.increased === statName ? 1.1 : 
+			natureObj?.decreased === statName ? 0.9 : 
+			1;
+
+		const value = Math.floor(
+			Math.floor(((2 * stat.base_stat + iv + Math.floor(ev / 4)) * level) / 100) + 5
+		);
+		return stat.stat.name === 'hp'
+			? Math.floor(((2 * stat.base_stat + iv + Math.floor(ev / 4)) * level) / 100) + level + 10
+			: Math.floor(value * natureMult);
+	}, [stat, level, nature, isAffected, ev, iv])
 
 	return(
 		<span className="flex flex-col">
 			<span className="flex gap-2">
 				<p>{title(abbreviateStat(stat.stat.name))}</p>			
-				<p className='font-bold'>{stat.base_stat}</p>
+				<p className='font-bold'>{statVal}</p>
 			</span>
 			<span className="flex gap-2">
 				<Slider 

@@ -67,10 +67,11 @@ export default function Page() {
 				},
 			];
 		});
+
 		setEdges(prev => {
 			const edgeId = `${id}-${abilityId}`;
 			if (prev.some(edge => edge.id === edgeId)) return prev;
-			return [...prev, { id: edgeId, source: id, target: abilityId }];
+			return [...prev, { id: edgeId, source: id, sourceHandle: `${id}-abilities`, target: abilityId }];
 		});
 	}, []);
 
@@ -84,7 +85,10 @@ export default function Page() {
 				id: uuid,
 				type: 'pokemonNode',
 				position: { x: 0, y: 0 },
-				data: { ...data, onExpandAbility: addAbilityNode },
+				data: { 
+					...data,
+					onExpandAbility: addAbilityNode 
+				},
 			},
 		]);
 	}, [addAbilityNode]);

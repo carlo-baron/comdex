@@ -66,7 +66,6 @@ const PokemonNode = memo(function PokemonNode({
 
   return (
     <Card className={`w-54 ${selected ? 'ring-2 ring-primary' : ''}`}>
-      <Handle type="target" position={Position.Left} />
 			<div className="flex justify-center w-full">
 				<Image
 					src={data.sprites.front_default}
@@ -117,18 +116,63 @@ const PokemonNode = memo(function PokemonNode({
 
       <CardContent>
         <div className="grid grid-cols-2 text-center">
-          <h2 className="font-extrabold">Stats</h2>
+          <h2 className="font-extrabold">
+						Stats
+						<Handle
+						position={Position.Left}
+						type='source'
+						style={{
+							top: 298
+						}}
+						id={`${id}-stats`}
+						/>
+					</h2>
           <h2
 					className="font-extrabold"
 					onClick={() => data.onExpandAbility(id, data.abilities.map(ability => ability.ability.url))}
-					>Abilities</h2>
-          <h2 className="font-extrabold">Moves</h2>
-          <h2 className="font-extrabold">Items</h2>
-          <h2 className="col-span-2 font-extrabold">Evolution</h2>
+					>
+						Abilities
+						<Handle
+						position={Position.Right}
+						type='source'
+						style={{
+							top: 298
+						}}
+						id={`${id}-abilities`}
+						/>
+					</h2>
+          <h2 className="font-extrabold">
+						Moves
+						<Handle
+						position={Position.Left}
+						type='source'
+						style={{
+							top: 298 + 20
+						}}
+						id={`${id}-moves`}
+						/>
+					</h2>
+          <h2 className="font-extrabold">
+						Items
+						<Handle
+						position={Position.Right}
+						type='source'
+						style={{
+							top: 298 + 20
+						}}
+						id={`${id}-items`}
+						/>
+					</h2>
+          <h2 className="col-span-2 font-extrabold">
+						Evolution
+						<Handle
+						position={Position.Bottom}
+						type='source'
+						id={`${id}-evolution`}
+						/>
+					</h2>
         </div>
       </CardContent>
-
-      <Handle type="source" position={Position.Right} />
     </Card>
   );
 });

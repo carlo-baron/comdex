@@ -1,12 +1,13 @@
-export type Stats = 'hp' | 'attack' | 'defense' | 'spatk' | 'spdef' | 'speed';
+export type PokemonStatNameType = 'hp' | 'attack' | 'defense' | 'spatk' | 'spdef' | 'speed';
+export type NatureName = typeof natures[number]['name'];
 
-export type Nature = {
+export type PokemonNatureType = {
   name: string;
-  increased: Stats | null;
-  decreased: Stats | null;
+  increased: PokemonStatNameType | null;
+  decreased: PokemonStatNameType | null;
 };
 
-export const natures: Nature[] = [
+export const natures: PokemonNatureType[] = [
   { name: 'hardy',   increased: null,      decreased: null },
   { name: 'lonely',  increased: 'attack',  decreased: 'defense' },
   { name: 'brave',   increased: 'attack',  decreased: 'speed' },

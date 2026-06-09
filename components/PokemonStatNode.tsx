@@ -25,25 +25,94 @@ export type PokemonStatProps = {
 
 export type PokemonStatNodeType = Node<PokemonStatProps, 'pokemonStatNode'>;
 
+interface StatSliderItemProps{
+	stat: {
+		name: string;
+		value: number;
+		min: number;
+		max: number;
+	};
+	natureChange: 'increase' | 'decrease' | null
+}
+
 export default function PokemonStatNode({ id, selected, data }: NodeProps<PokemonStatNodeType>) {
 	const [isAffected, setIsAffected] = useState(false);
+	const [ev, setEv] = useState(0);
+	const [iv, setIv] = useState(0);
 
-	const bst = useMemo(() => {
-		return data.stats.reduce((acc, val) => {
-			return acc + val.base_stat
-		}, 0)
-	}, [data.stats]);
+	const calculatedStats = useMemo(() => {
+
+		const statMap = data.stats.map((stat) => {
+			const minVal = Math.floor(
+				Math.floor(((2 * stat.base_stat + 0 + 0) * 100) / 100) + 5
+			);
+
+			const min = stat.stat.name === 'hp'
+				? Math.floor(((2 * stat.base_stat + 0 + 0) * 100) / 100) + 100 + 10
+				: Math.floor(minVal * 0.9);
+
+			const maxVal = Math.floor(
+				Math.floor(((2 * stat.base_stat + 31 + Math.floor(252 / 4)) * 100) / 100) + 5
+			);
+
+			const max = stat.stat.name === 'hp'
+				? Math.floor(((2 * stat.base_stat + 31 + Math.floor(252 / 4)) * 100) / 100) + 100 + 10
+				: Math.floor(maxVal * 1.1);
+
+				const natureObj = natures.find(n => n.name === data.nature);
+				const statName = stat.stat.name;
+
+				const natureMult = 
+					natureObj?.increased === statName ? 1.1 : 
+					natureObj?.decreased === statName ? 0.9 : 
+					1;
+
+				const statValNum = Math.floor(
+					Math.floor(((2 * stat.base_stat + iv + Math.floor(ev / 4)) * data.level) / 100) + 5
+				);
+
+				const statVal = stat.stat.name === 'hp'
+					? Math.floor(((2 * stat.base_stat + iv + Math.floor(ev / 4)) * data.level) / 100) + data.level + 10
+					: Math.floor(statValNum * natureMult);
+
+				const natureChange: 'increase' | 'decrease' | null = 
+					natureObj?.increased === statName ? "increase" : 
+					natureObj?.decreased === statName ? "decrease" : 
+					null;
+
+				return {
+					stat: {
+						name: stat.stat.name,
+						value: isAffected ? statVal : stat.base_stat,
+						min,
+						max,
+					},
+					natureChange: natureChange
+				};
+		});
+
+		return statMap;
+
+	}, [data.level, data.nature, ev, iv, data.stats, isAffected]);
+
+	const radarData = useMemo(() => {
+		return calculatedStats.map(stat => {
+			return {
+				name: stat.stat.name,
+				value: stat.stat.value
+			};
+		});
+	}, [calculatedStats]);
+
 	const statSliders = useMemo(() => 
-		data.stats.map((statItem, index) => (
+		calculatedStats.map((statItem, index) => (
 			<StatSliderItem 
 			key={index}
-			stat={statItem}
-			level={data.level}
-			nature={data.nature}
-			isAffected={isAffected}
+			stat={statItem.stat}
+			natureChange={statItem.natureChange}
 			/>
 		)),
-	[data.stats, isAffected, data.nature, data.level]);
+	[calculatedStats]);
 
   return (
 		<Card className={`w-80 ${selected ? 'ring-2 ring-primary' : ''}`}>
@@ -57,16 +126,10 @@ export default function PokemonStatNode({ id, selected, data }: NodeProps<Pokemo
         </CardDescription>
       </CardHeader>
 			<CardContent>
-				<span className="flex gap-2 top">
-					<StatRadarChart
-					stats={data.stats}
-					/>
-					<div className='flex-1 flex flex-col items-center justify-center'>
-						<p className="font-medium">BST</p>
-						<p className='font-bold text-2xl'>{bst}</p>
-					</div>
-				</span>
-				<span className="flex gap-2">
+				<StatRadarChart
+				stats={radarData}
+				/>
+				<span className="mt-4 flex gap-2">
 					<p>Apply Level & Nature</p>
 					<Switch onCheckedChange={() => setIsAffected(prev => !prev)}/>
 				</span>
@@ -81,72 +144,24 @@ export default function PokemonStatNode({ id, selected, data }: NodeProps<Pokemo
 const StatSliderItem = memo(function StatSliderItem(
 	{
 		stat,
-		level = 100,
-		iv = 0,
-		ev = 0,
-		nature,
-		isAffected = false
+		natureChange
 	}
 	:
-	{
-		stat: PokemonStatType;
-		level: number;
-		iv: number;
-		ev: number;
-		nature: NatureName;
-		isAffected: boolean;
-	}
+	StatSliderItemProps
 ){
-
-	const min = useMemo(() => {
-		const value = Math.floor(
-			Math.floor(((2 * stat.base_stat + 0 + 0) * 100) / 100) + 5
-		);
-		return stat.stat.name === 'hp'
-			? Math.floor(((2 * stat.base_stat + 0 + 0) * 100) / 100) + 100 + 10
-			: Math.floor(value * 0.9);
-	}, [stat]);
-
-	const max = useMemo(() => {
-		const value = Math.floor(
-			Math.floor(((2 * stat.base_stat + 31 + Math.floor(252 / 4)) * 100) / 100) + 5
-		);
-		return stat.stat.name === 'hp'
-			? Math.floor(((2 * stat.base_stat + 31 + Math.floor(252 / 4)) * 100) / 100) + 100 + 10
-			: Math.floor(value * 1.1);
-	}, [stat]);
-
-	const statVal = useMemo(() => {
-		if(!isAffected) return stat.base_stat;
-
-		const natureObj = natures.find(n => n.name === nature);
-		const statName = stat.stat.name;
-
-		const natureMult = 
-			natureObj?.increased === statName ? 1.1 : 
-			natureObj?.decreased === statName ? 0.9 : 
-			1;
-
-		const value = Math.floor(
-			Math.floor(((2 * stat.base_stat + iv + Math.floor(ev / 4)) * level) / 100) + 5
-		);
-		return stat.stat.name === 'hp'
-			? Math.floor(((2 * stat.base_stat + iv + Math.floor(ev / 4)) * level) / 100) + level + 10
-			: Math.floor(value * natureMult);
-	}, [stat, level, nature, isAffected, ev, iv])
-
 	return(
 		<span className="flex flex-col">
-			<span className="flex gap-2">
-				<p>{title(abbreviateStat(stat.stat.name))}</p>			
-				<p className='font-bold'>{statVal}</p>
+			<span className={`flex gap-2 ${natureChange === 'increase' ? 'text-red-500' : natureChange === 'decrease' ? 'text-blue-500' : '' }`}>
+				<p>{title(abbreviateStat(stat.name))}</p>			
+				<p className='font-bold'>{stat.value}</p>
 			</span>
 			<span className="flex gap-2">
 				<Slider 
 					className='flex-2 col-span-2 [&_[role=slider]]:hidden pointer-events-none'
-					defaultValue={[stat.base_stat]}
+					value={[stat.value]}
+					max={stat.max}
 				/>
-				<p className="min-max text-nowrap flex-1">{min}-{max}</p>
+				<p className="min-max text-nowrap">{stat.min}-{stat.max}</p>
 			</span>
 		</span>
 	);

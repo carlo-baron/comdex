@@ -32,6 +32,10 @@ export const abbreviateStat = (statName: string): string => {
 	return map[statName] ?? statName;
 };
 
+type StatRadarChartStatType = {
+	name: string,
+	value: number
+}
 
 function StatRadarChart(
 	{
@@ -39,20 +43,20 @@ function StatRadarChart(
 	}
 	:
 	{
-		stats: PokemonStatType[]
+		stats: StatRadarChartStatType[]
 	}
 ) {
 
 	const chartData = stats.map(statItem => {
 		return {
-		stat: abbreviateStat(statItem.stat.name),
-		value: statItem.base_stat
+		stat: statItem.name,
+		value: statItem.value
 	}});
 
   return (
 		<ChartContainer
 			config={chartConfig}
-			className="w-50 h-35 overflow-visible nodrag"
+			className="w-full h-35 overflow-visible nodrag"
 		>
 			<RadarChart data={chartData}>
 				<ChartTooltip cursor={false} content={<ChartTooltipContent />} />

@@ -111,7 +111,7 @@ function PokemonListItem(
 			className='flex gap-4 cursor-pointer'
 			>
 				<img 
-				src={data?.sprite}
+				src={data.sprite ?? ''}
 				alt={data.name}
 				className='aspect-square w-15'
 				/>

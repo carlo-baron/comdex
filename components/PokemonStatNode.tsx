@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useCallback } from 'react';
+import { memo, useMemo, useCallback } from 'react';
 import { Switch } from "@/components/ui/switch"
 import { useState } from 'react';
 import { NodeProps, Node, Handle, Position } from '@xyflow/react';
@@ -26,7 +26,7 @@ export type PokemonStatProps = {
 
 export type PokemonStatNodeType = Node<PokemonStatProps, 'pokemonStatNode'>;
 
-export default function PokemonStatNode({ id, selected, data }: NodeProps<PokemonStatNodeType>) {
+function PokemonStatNode({ id, selected, data }: NodeProps<PokemonStatNodeType>) {
 	const [isAffected, setIsAffected] = useState(false);
 	const [evs, setEvs] = useState<Record<string, number>>({
 	hp: 0, attack: 0, defense: 0,
@@ -186,3 +186,5 @@ export default function PokemonStatNode({ id, selected, data }: NodeProps<Pokemo
     </Card>
   );
 }
+
+export default memo(PokemonStatNode);

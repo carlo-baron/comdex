@@ -1,5 +1,5 @@
 "use client"
-
+ 
 import { memo } from "react"
 import { PolarAngleAxis, PolarGrid, Radar, RadarChart } from "recharts"
 import {
@@ -8,7 +8,6 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart"
-import { PokemonStatType } from "@/types/pokemon"
 
 export const description = "A radar chart"
 

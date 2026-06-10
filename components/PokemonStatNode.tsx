@@ -1,8 +1,7 @@
 "use client";
-import { memo, useMemo } from 'react';
-import { title } from '@/utils/titleCase';
+
+import { useMemo, useCallback } from 'react';
 import { Switch } from "@/components/ui/switch"
-import { Slider } from './ui/slider';
 import { useState } from 'react';
 import { NodeProps, Node, Handle, Position } from '@xyflow/react';
 import {
@@ -12,33 +11,46 @@ import {
   CardTitle,
 	CardContent
 } from "./ui/card";
-import StatRadarChart, { abbreviateStat } from './StatRadarChart';
+import StatRadarChart from './StatRadarChart';
 import { PokemonStatType } from '@/types/pokemon';
 import { NatureName } from '@/data/natures';
 import { natures } from '@/data/natures';
+import { StatSliderItem } from './StatSliderItem';
+import { EvIvSliderItem } from './EvIvSlider';
 
 export type PokemonStatProps = {
 	stats: PokemonStatType[],
 	level: number;
-	nature: NatureName
+	nature: NatureName;
 }
 
 export type PokemonStatNodeType = Node<PokemonStatProps, 'pokemonStatNode'>;
 
-interface StatSliderItemProps{
-	stat: {
-		name: string;
-		value: number;
-		min: number;
-		max: number;
-	};
-	natureChange: 'increase' | 'decrease' | null
-}
-
 export default function PokemonStatNode({ id, selected, data }: NodeProps<PokemonStatNodeType>) {
 	const [isAffected, setIsAffected] = useState(false);
-	const [ev, setEv] = useState(0);
-	const [iv, setIv] = useState(0);
+	const [evs, setEvs] = useState<Record<string, number>>({
+	hp: 0, attack: 0, defense: 0,
+		'special-attack': 0, 'special-defense': 0, speed: 0
+	});
+	const [ivs, setIvs] = useState<Record<string, number>>({
+		hp: 0, attack: 0, defense: 0,
+		'special-attack': 0, 'special-defense': 0, speed: 0
+	});
+
+	const totalEvs = useMemo(() => 
+		Object.values(evs).reduce((a, b) => a + b, 0), 
+	[evs]);
+
+	const setEv = useCallback((statName: string, value: number) => {
+		const otherTotal = totalEvs - (evs[statName] ?? 0);
+		const capped = Math.min(value, 252, 510 - otherTotal);
+		setEvs(prev => ({ ...prev, [statName]: capped }));
+	}, [evs, totalEvs]);
+
+	const setIv = useCallback((statName: string, value: number) => {
+		const capped = Math.min(31, Math.max(0, value))
+		setIvs(prev => ({ ...prev, [statName]: capped }));
+	}, [])
 
 	const calculatedStats = useMemo(() => {
 
@@ -68,15 +80,17 @@ export default function PokemonStatNode({ id, selected, data }: NodeProps<Pokemo
 					1;
 
 				const statValNum = Math.floor(
-					Math.floor(((2 * stat.base_stat + iv + Math.floor(ev / 4)) * data.level) / 100) + 5
+					Math.floor(((2 * stat.base_stat + ivs[stat.stat.name] + Math.floor(evs[stat.stat.name] / 4)) * data.level) / 100) + 5
 				);
 
 				const statVal = stat.stat.name === 'hp'
-					? Math.floor(((2 * stat.base_stat + iv + Math.floor(ev / 4)) * data.level) / 100) + data.level + 10
+					? Math.floor(((2 * stat.base_stat + ivs[stat.stat.name] + Math.floor(evs[stat.stat.name] / 4)) * data.level) / 100) + data.level + 10
 					: Math.floor(statValNum * natureMult);
 
 				const natureChange: 'increase' | 'decrease' | null = 
+					isAffected &&
 					natureObj?.increased === statName ? "increase" : 
+					isAffected &&
 					natureObj?.decreased === statName ? "decrease" : 
 					null;
 
@@ -93,7 +107,13 @@ export default function PokemonStatNode({ id, selected, data }: NodeProps<Pokemo
 
 		return statMap;
 
-	}, [data.level, data.nature, ev, iv, data.stats, isAffected]);
+	}, [data.level, data.nature,evs, ivs, data.stats, isAffected]);
+
+	const bst = useMemo(() => {
+		return calculatedStats.reduce((acc, item) => {
+			return acc + item.stat.value;
+		}, 0);
+	}, [calculatedStats]);
 
 	const radarData = useMemo(() => {
 		return calculatedStats.map(stat => {
@@ -114,6 +134,19 @@ export default function PokemonStatNode({ id, selected, data }: NodeProps<Pokemo
 		)),
 	[calculatedStats]);
 
+	const evIvSliders = useMemo(() => {
+		return calculatedStats.map((statItem, index) => (
+			<EvIvSliderItem
+			key={index}
+			name={statItem.stat.name}
+			ev={evs[statItem.stat.name]}
+			iv={ivs[statItem.stat.name]}
+			onEvChange={setEv}
+			onIvChange={setIv}
+			/>
+		))
+	}, [calculatedStats, evs, setEv, ivs, setIv]);
+
   return (
 		<Card className={`w-80 ${selected ? 'ring-2 ring-primary' : ''}`}>
       <Handle type="target" position={Position.Right} />
@@ -125,44 +158,31 @@ export default function PokemonStatNode({ id, selected, data }: NodeProps<Pokemo
 					See pokemon stats with adjustments due to level and nature.
         </CardDescription>
       </CardHeader>
-			<CardContent>
+			<CardContent
+			className='flex flex-col gap-2'
+			>
 				<StatRadarChart
 				stats={radarData}
 				/>
-				<span className="mt-4 flex gap-2">
+				<span className="flex gap-2">
 					<p>Apply Level & Nature</p>
 					<Switch onCheckedChange={() => setIsAffected(prev => !prev)}/>
 				</span>
 				<section className="cursor-default nodrag sliders">
-				{statSliders}
+					{statSliders}
+					<span className="flex gap-2">
+						<p>Total</p>			
+						<p className='font-bold'>{bst}</p>
+						<span className="flex gap-1 ml-auto">
+							<p className="text-muted-foreground">Min</p>
+							<p className="text-muted-foreground">Max</p>
+						</span>
+					</span>
+				</section>
+				<section className="nodrag cursor-default ev-iv">
+					{evIvSliders}
 				</section>
 			</CardContent>
     </Card>
   );
 }
-
-const StatSliderItem = memo(function StatSliderItem(
-	{
-		stat,
-		natureChange
-	}
-	:
-	StatSliderItemProps
-){
-	return(
-		<span className="flex flex-col">
-			<span className={`flex gap-2 ${natureChange === 'increase' ? 'text-red-500' : natureChange === 'decrease' ? 'text-blue-500' : '' }`}>
-				<p>{title(abbreviateStat(stat.name))}</p>			
-				<p className='font-bold'>{stat.value}</p>
-			</span>
-			<span className="flex gap-2">
-				<Slider 
-					className='flex-2 col-span-2 [&_[role=slider]]:hidden pointer-events-none'
-					value={[stat.value]}
-					max={stat.max}
-				/>
-				<p className="min-max text-nowrap">{stat.min}-{stat.max}</p>
-			</span>
-		</span>
-	);
-});

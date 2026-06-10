@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { useState, useCallback } from 'react';
+import { Plus } from 'lucide-react';
 import {
   ReactFlow,
   applyNodeChanges,
@@ -17,7 +18,12 @@ import {
   type Connection,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
+
+import pokemonSearchList from '@/data/pokemon.json'
+import PokemonSearchDialog from '@/components/PokemonSearchDialog';
+
 import { 
+    PokemonStatType,
 	type PokemonType 
 } from '@/types/pokemon';
 import
@@ -31,16 +37,23 @@ PokemonAbilityNode,
 	type PokemonAbilityNodeType 
 }
 from '@/components/PokemonAbilityNode';
-import pokemonSearchList from '@/data/pokemon.json'
-import PokemonSearchDialog from '@/components/PokemonSearchDialog';
+import 
+PokemonStatNode,
+{
+	type PokemonStatNodeType
+}
+from '@/components/PokemonStatNode';
+import { NatureName } from '@/data/natures';
 
 type AppNode = 
 	PokemonNodeType | 
-	PokemonAbilityNodeType;
+	PokemonAbilityNodeType |
+	PokemonStatNodeType;
 
 const nodeTypes = {
   pokemonNode: PokemonNode,
   pokemonAbilityNode: PokemonAbilityNode,
+	pokemonStatNode: PokemonStatNode
 };
 
 const initialEdges: Edge[] = [];
@@ -51,7 +64,7 @@ export default function Page() {
 	const [addMon, setAddMon] = useState(false);
 
 	const addAbilityNode = useCallback((id: string, urls: string[]) => {
-		const abilityId = `${id}-${urls}`;
+		const abilityId = `${id}-abilityNode`;
 		setNodes(prev => {
 			if (prev.some(node => node.id === abilityId)) return prev;
 			const parent = prev.find(node => node.id === id);
@@ -75,6 +88,36 @@ export default function Page() {
 		});
 	}, []);
 
+	const addStatNode = useCallback((
+		id: string,
+		stats: PokemonStatType[],
+		level: number,
+		nature: NatureName 
+	) => {
+		const statNodeId = `${id}-statNode`;
+		setNodes(prev => {
+			if (prev.some(node => node.id === statNodeId)) return prev;
+			const parent = prev.find(node => node.id === id);
+			const parentX = parent?.position.x ?? 0;
+			const parentY = parent?.position.y ?? 0;
+			return [
+				...prev,
+				{
+					id: statNodeId,
+					type: 'pokemonStatNode',
+					position: { x: parentX - 200, y: parentY },
+					data: { stats, level, nature },
+				},
+			];
+		});
+
+		setEdges(prev => {
+			const edgeId = `${id}-${statNodeId}`;
+			if (prev.some(edge => edge.id === edgeId)) return prev;
+			return [...prev, { id: edgeId, source: id, sourceHandle: `${id}-stats`, target: statNodeId }];
+		});
+	}, []);
+
 	const addPokemonNode = useCallback(async (name: string) => {
 		const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${name}`);
 		const data: PokemonType = await res.json();
@@ -87,11 +130,12 @@ export default function Page() {
 				position: { x: 0, y: 0 },
 				data: { 
 					...data,
-					onExpandAbility: addAbilityNode 
+					onExpandAbility: addAbilityNode, 
+					onExpandStats: addStatNode,
 				},
 			},
 		]);
-	}, [addAbilityNode]);
+	}, [addAbilityNode, addStatNode]);
 
   const onNodesChange = useCallback(
     (changes: NodeChange<AppNode>[]) =>
@@ -115,6 +159,7 @@ export default function Page() {
   return (
     <div className="w-full h-screen">
       <ReactFlow
+				selectionOnDrag
         nodes={nodes}
         edges={edges}
         nodeTypes={nodeTypes}
@@ -136,7 +181,10 @@ export default function Page() {
 				>
 					<Button
 					onClick={() => setAddMon(true)}
-					>Add</Button>
+					>
+						Add
+						<Plus />
+					</Button>
 					<PokemonSearchDialog 
 					open={addMon}
 					onOpenChange={() => setAddMon(prev => !prev)}

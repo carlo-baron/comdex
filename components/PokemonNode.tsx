@@ -1,8 +1,8 @@
 "use client";
 import Image from 'next/image';
 import { Badge } from './ui/badge';
-import { useRef, useMemo, memo, useCallback } from 'react';
-import { NodeProps, Node, Handle, Position } from '@xyflow/react';
+import { useEffect, useRef, useMemo, memo, useCallback, useState } from 'react';
+import { NodeProps, Node, Handle, Position, useReactFlow } from '@xyflow/react';
 import { Volume2 } from 'lucide-react';
 import { Input } from './ui/input';
 import {
@@ -18,8 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { type PokemonType } from '@/types/pokemon';
-import { natures } from '@/data/natures';
+import type { PokemonStatType, PokemonType } from '@/types/pokemon';
+import { natures, type NatureName } from '@/data/natures';
 
 const NatureOptions = memo(() => (
   <>
@@ -34,6 +34,7 @@ NatureOptions.displayName = 'NatureOptions';
 
 type PokemonNodeProps = {
   onExpandAbility: (id: string, urls: string[]) => void;
+  onExpandStats: (id: string, stats: PokemonStatType[], level: number, nature: NatureName) => void;
 } & PokemonType;
 
 export type PokemonNodeType = Node<PokemonNodeProps, 'pokemonNode'>;
@@ -44,6 +45,14 @@ const PokemonNode = memo(function PokemonNode({
   data,
 }: NodeProps<PokemonNodeType>) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [nature, setNature] = useState<NatureName>('sassy');
+  const [level, setLevel] = useState<number>(100);
+	const { updateNodeData } = useReactFlow();
+
+	useEffect(() => {
+		const statNodeId = `${id}-statNode`;
+		updateNodeData(statNodeId, { level, nature });
+	}, [level, nature, id, updateNodeData]);
 
   const handleCryClick = useCallback(() => {
     audioRef.current?.play();
@@ -66,14 +75,14 @@ const PokemonNode = memo(function PokemonNode({
 
   return (
     <Card className={`w-54 ${selected ? 'ring-2 ring-primary' : ''}`}>
-			<div className="flex justify-center w-full">
-				<Image
-					src={data.sprites.front_default}
-					width={100}
-					height={100}
-					alt="Pokemon Sprite"
-				/>
-			</div>
+      <div className="flex justify-center w-full">
+        <Image
+          src={data.sprites.front_default}
+          width={100}
+          height={100}
+          alt="Pokemon Sprite"
+        />
+      </div>
 
       <CardHeader>
         <CardTitle className="flex gap-2 items-center">
@@ -92,7 +101,11 @@ const PokemonNode = memo(function PokemonNode({
           <p>Lvl:</p>
           <Input
             type="number"
-            defaultValue={100}
+            value={level}
+            onChange={(e) => {
+              const val = Math.min(100, Math.max(1, Number(e.target.value)));
+              setLevel(val);
+            }}
             onKeyDown={(e) => e.stopPropagation()}
             min={1}
             max={100}
@@ -102,8 +115,9 @@ const PokemonNode = memo(function PokemonNode({
         <span className="flex gap-2 items-center level">
           <p>Nature:</p>
           <Select
-					defaultValue='sassy'
-					>
+            value={nature}
+            onValueChange={(val) => setNature(val as NatureName)}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Choose a Nature" />
             </SelectTrigger>
@@ -115,62 +129,57 @@ const PokemonNode = memo(function PokemonNode({
       </CardHeader>
 
       <CardContent>
-        <div className="grid grid-cols-2 text-center">
-          <h2 className="font-extrabold">
-						Stats
-						<Handle
-						position={Position.Left}
-						type='source'
-						style={{
-							top: 298
-						}}
-						id={`${id}-stats`}
-						/>
-					</h2>
+        <div className="cursor-pointer nodrag grid grid-cols-2 text-center">
           <h2
-					className="font-extrabold"
-					onClick={() => data.onExpandAbility(id, data.abilities.map(ability => ability.ability.url))}
-					>
-						Abilities
-						<Handle
-						position={Position.Right}
-						type='source'
-						style={{
-							top: 298
-						}}
-						id={`${id}-abilities`}
-						/>
-					</h2>
+            className="font-extrabold"
+            onClick={() => data.onExpandStats(id, data.stats, level, nature)}
+          >
+            Stats
+            <Handle
+              position={Position.Left}
+              type='source'
+              style={{ top: 298 }}
+              id={`${id}-stats`}
+            />
+          </h2>
+          <h2
+            className="font-extrabold"
+            onClick={() => data.onExpandAbility(id, data.abilities.map(ability => ability.ability.url))}
+          >
+            Abilities
+            <Handle
+              position={Position.Right}
+              type='source'
+              style={{ top: 298 }}
+              id={`${id}-abilities`}
+            />
+          </h2>
           <h2 className="font-extrabold">
-						Moves
-						<Handle
-						position={Position.Left}
-						type='source'
-						style={{
-							top: 298 + 20
-						}}
-						id={`${id}-moves`}
-						/>
-					</h2>
+            Moves
+            <Handle
+              position={Position.Left}
+              type='source'
+              style={{ top: 298 + 20 }}
+              id={`${id}-moves`}
+            />
+          </h2>
           <h2 className="font-extrabold">
-						Items
-						<Handle
-						position={Position.Right}
-						type='source'
-						style={{
-							top: 298 + 20
-						}}
-						id={`${id}-items`}
-						/>
-					</h2>
+            Items
+            <Handle
+              position={Position.Right}
+              type='source'
+              style={{ top: 298 + 20 }}
+              id={`${id}-items`}
+            />
+          </h2>
           <h2 className="col-span-2 font-extrabold">
-						Evolution
-						<Handle
-						position={Position.Bottom}
-						type='source'
-						id={`${id}-evolution`}
-						/>
-					</h2>
+            Evolution
+            <Handle
+              position={Position.Bottom}
+              type='source'
+              id={`${id}-evolution`}
+            />
+          </h2>
         </div>
       </CardContent>
     </Card>

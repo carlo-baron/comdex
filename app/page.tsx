@@ -130,7 +130,7 @@ export default function Page() {
 	}, []);
 
 	const addMovesNode = useCallback((id: string, movePool: string[]) => {
-		const moveId = `${id}-abilityNode`;
+		const moveId = `${id}-movesNode`;
 		setNodes(prev => {
 			if (prev.some(node => node.id === moveId)) return prev;
 			const parent = prev.find(node => node.id === id);

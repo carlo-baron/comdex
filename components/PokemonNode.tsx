@@ -21,20 +21,10 @@ import {
 import type { PokemonStatType, PokemonType } from '@/types/pokemon';
 import { natures, type NatureName } from '@/data/natures';
 
-const NatureOptions = memo(() => (
-  <>
-    {natures.map((nature, index) => (
-      <SelectItem value={nature.name} key={index}>
-        {nature.name[0].toUpperCase() + nature.name.slice(1)}
-      </SelectItem>
-    ))}
-  </>
-));
-NatureOptions.displayName = 'NatureOptions';
-
 type PokemonNodeProps = {
   onExpandAbility: (id: string, urls: string[]) => void;
   onExpandStats: (id: string, stats: PokemonStatType[], level: number, nature: NatureName) => void;
+	onExpandMoves: (id: string, movePool: string[]) => void;
 } & PokemonType;
 
 export type PokemonNodeType = Node<PokemonNodeProps, 'pokemonNode'>;
@@ -72,6 +62,15 @@ const PokemonNode = memo(function PokemonNode({
       )),
     [data.types]
   );
+
+	// TODO: change to combobox
+	const natureOptions = useMemo(() => {
+		return natures.map((nature, index) => (
+      <SelectItem value={nature.name} key={index}>
+        {nature.name[0].toUpperCase() + nature.name.slice(1)}
+      </SelectItem>
+    ));
+	}, []);
 
   return (
     <Card className={`w-54 ${selected ? 'ring-2 ring-primary' : ''}`}>
@@ -122,7 +121,7 @@ const PokemonNode = memo(function PokemonNode({
               <SelectValue placeholder="Choose a Nature" />
             </SelectTrigger>
             <SelectContent>
-              <NatureOptions />
+							{natureOptions}
             </SelectContent>
           </Select>
         </span>
@@ -154,7 +153,10 @@ const PokemonNode = memo(function PokemonNode({
               id={`${id}-abilities`}
             />
           </h2>
-          <h2 className="font-extrabold">
+          <h2 
+					className="font-extrabold"
+          onClick={() => data.onExpandMoves(id, data.moves.map(move => move.move.name))}
+					>
             Moves
             <Handle
               position={Position.Left}

@@ -14,7 +14,14 @@ export type PokemonType = {
   stats: PokemonStatType[];
 	abilities: PokemonAbilityType[];
 	types: PokemonTypeType[]
+	moves: PokemonMoveType[]
 };
+
+type PokemonMoveType = {
+	move: {
+		name: string
+	}
+}
 
 type PokemonTypeType = {
 	type: {

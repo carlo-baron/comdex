@@ -69,11 +69,11 @@ export type FlingEffect =
 export type ItemType = {
   id: number;
   name: string;
-  sprite: string;
-  category: ItemCategory;
+  sprite: string | null;
+  category: ItemCategory | null;
   fling_power: number | null;
   fling_effect: FlingEffect | null;
   attributes: ItemAttribute[];
-  effect: string;
+  effect: string | null;
   flavor_text: string | null;
 };

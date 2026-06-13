@@ -174,6 +174,7 @@ export default function Page() {
 					id: itemId,
 					type: 'pokemonItemsNode',
 					position: { x: parentX + 200, y: parentY },
+					data: {},
 				},
 			];
 		});

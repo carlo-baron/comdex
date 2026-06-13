@@ -45,7 +45,7 @@ function PokemonItemNode({ selected }: NodeProps<PokemonItemNodeType>) {
 			.map(item => 
 					 <ItemCard 
 					 key={item.id}
-					 item={item}
+					 item={item as ItemType}
 					 onSelect={(item) => setSelectedItem(item)}
 					 />)
 	}, [limit, query]);

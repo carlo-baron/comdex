@@ -64,6 +64,7 @@ function PokemonMovesNode({ selected, data }: NodeProps<PokemonMovesNodeType>) {
 		});
 		setSelectedCard(index);
 	}, []);
+
 	const moveMap = useMemo(() => {
 		return learnableMoves
 			.filter(move => !selectedMoves.some(s => s?.name === move.name))
@@ -71,6 +72,7 @@ function PokemonMovesNode({ selected, data }: NodeProps<PokemonMovesNodeType>) {
 			.slice(0, limit)
 			.map(move => <MoveCard key={move.id} move={move} onSelect={handleSelectMove} />)
 	}, [learnableMoves, limit, query, handleSelectMove, selectedMoves]);
+
 	return (
 		<Card className={`w-80 ${selected ? 'ring-2 ring-primary' : ''}`}>
 			<Handle type="target" position={Position.Right} />
@@ -106,6 +108,7 @@ function PokemonMovesNode({ selected, data }: NodeProps<PokemonMovesNodeType>) {
 	);
 }
 export default memo(PokemonMovesNode);
+
 function MoveCard({ move, onSelect } : { move: MoveType; onSelect: (move: MoveType) => void }){
 	return(
 		<Card

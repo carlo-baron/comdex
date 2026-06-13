@@ -51,6 +51,11 @@ PokemonMovesNode,
 	type PokemonMovesNodeType,
 }
 from '@/components/PokemonMovesNode';
+import PokemonItemNode,
+{ 
+	type PokemonItemNodeType
+}
+from '@/components/PokemonItemNode';
 //#endregion
 
 
@@ -58,13 +63,15 @@ type AppNode =
 	PokemonNodeType | 
 	PokemonAbilityNodeType |
 	PokemonStatNodeType |
-	PokemonMovesNodeType;
+	PokemonMovesNodeType |
+	PokemonItemNodeType;
 
 const nodeTypes = {
   pokemonNode: PokemonNode,
   pokemonAbilityNode: PokemonAbilityNode,
 	pokemonStatNode: PokemonStatNode,
 	pokemonMovesNode: PokemonMovesNode,
+	pokemonItemsNode: PokemonItemNode,
 };
 
 const initialEdges: Edge[] = [];
@@ -154,6 +161,30 @@ export default function Page() {
 		});
 	}, []);
 
+	const addItemsNode = useCallback((id: string) => {
+		const itemId = `${id}-itemNode`;
+		setNodes(prev => {
+			if (prev.some(node => node.id === itemId)) return prev;
+			const parent = prev.find(node => node.id === id);
+			const parentX = parent?.position.x ?? 0;
+			const parentY = parent?.position.y ?? 0;
+			return [
+				...prev,
+				{
+					id: itemId,
+					type: 'pokemonItemsNode',
+					position: { x: parentX + 200, y: parentY },
+				},
+			];
+		});
+
+		setEdges(prev => {
+			const edgeId = `${id}-${itemId}`;
+			if (prev.some(edge => edge.id === edgeId)) return prev;
+			return [...prev, { id: edgeId, source: id, sourceHandle: `${id}-items`, target: itemId }];
+		});
+	}, []);
+
 	const addPokemonNode = useCallback(async (name: string) => {
 		const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${name}`);
 		const data: PokemonType = await res.json();
@@ -169,10 +200,11 @@ export default function Page() {
 					onExpandAbility: addAbilityNode, 
 					onExpandStats: addStatNode,
 					onExpandMoves: addMovesNode,
+					onExpandItems: addItemsNode,
 				},
 			},
 		]);
-	}, [addAbilityNode, addStatNode, addMovesNode]);
+	}, [addAbilityNode, addStatNode, addMovesNode, addItemsNode]);
 
   const onNodesChange = useCallback(
     (changes: NodeChange<AppNode>[]) =>

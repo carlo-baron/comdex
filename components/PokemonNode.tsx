@@ -26,6 +26,7 @@ type PokemonNodeProps = {
   onExpandStats: (id: string, stats: PokemonStatType[], level: number, nature: NatureName) => void;
 	onExpandMoves: (id: string, movePool: string[]) => void;
 	onExpandItems: (id: string) => void;
+	onExpandEvolution: (id: string, name: string, sprite: string) => void;
 } & PokemonType;
 
 export type PokemonNodeType = Node<PokemonNodeProps, 'pokemonNode'>;
@@ -177,7 +178,9 @@ const PokemonNode = memo(function PokemonNode({
               id={`${id}-items`}
             />
           </h2>
-          <h2 className="col-span-2 font-extrabold">
+          <h2 className="col-span-2 font-extrabold"
+          onClick={() => data.onExpandEvolution(id, data.name, data.sprites.front_default)}
+					>
             Evolution
             <Handle
               position={Position.Bottom}

@@ -57,6 +57,11 @@ import PokemonItemNode,
 	type PokemonItemNodeType
 }
 from '@/components/PokemonItemNode';
+import PokemonEvolutionNode,
+{
+	type PokemonEvolutionNodeType
+}
+from '@/components/PokemonEvolutionNode';
 //#endregion
 
 import { useTheme } from "next-themes"
@@ -66,7 +71,8 @@ type AppNode =
 	PokemonAbilityNodeType |
 	PokemonStatNodeType |
 	PokemonMovesNodeType |
-	PokemonItemNodeType;
+	PokemonItemNodeType |
+	PokemonEvolutionNodeType;
 
 const nodeTypes = {
   pokemonNode: PokemonNode,
@@ -74,6 +80,7 @@ const nodeTypes = {
 	pokemonStatNode: PokemonStatNode,
 	pokemonMovesNode: PokemonMovesNode,
 	pokemonItemsNode: PokemonItemNode,
+	pokemonEvolutionNode: PokemonEvolutionNode,
 };
 
 const initialEdges: Edge[] = [];
@@ -189,6 +196,31 @@ export default function Page() {
 		});
 	}, []);
 
+	const addEvolutionNode = useCallback((id: string, name: string, sprite: string) => {
+		const evoId = `${id}-evolutionNode`;
+		setNodes(prev => {
+			if (prev.some(node => node.id === evoId)) return prev;
+			const parent = prev.find(node => node.id === id);
+			const parentX = parent?.position.x ?? 0;
+			const parentY = parent?.position.y ?? 0;
+			return [
+				...prev,
+				{
+					id: evoId,
+					type: 'pokemonEvolutionNode',
+					position: { x: parentX, y: parentY + 400 },
+					data: { name: name, sprite: sprite},
+				},
+			];
+		});
+
+		setEdges(prev => {
+			const edgeId = `${id}-${evoId}`;
+			if (prev.some(edge => edge.id === edgeId)) return prev;
+			return [...prev, { id: edgeId, source: id, sourceHandle: `${id}-evolution`, target: evoId }];
+		});
+	}, []);
+
 	const addPokemonNode = useCallback(async (name: string) => {
 		const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${name}`);
 		const data: PokemonType = await res.json();
@@ -205,10 +237,11 @@ export default function Page() {
 					onExpandStats: addStatNode,
 					onExpandMoves: addMovesNode,
 					onExpandItems: addItemsNode,
+					onExpandEvolution: addEvolutionNode
 				},
 			},
 		]);
-	}, [addAbilityNode, addStatNode, addMovesNode, addItemsNode]);
+	}, [addAbilityNode, addStatNode, addMovesNode, addItemsNode, addEvolutionNode]);
 
   const onNodesChange = useCallback(
     (changes: NodeChange<AppNode>[]) =>

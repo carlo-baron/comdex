@@ -16,6 +16,7 @@ import {
   type NodeChange,
   type EdgeChange,
   type Connection,
+  type ColorMode,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { NatureName } from '@/data/natures';
@@ -58,6 +59,7 @@ import PokemonItemNode,
 from '@/components/PokemonItemNode';
 //#endregion
 
+import { useTheme } from "next-themes"
 
 type AppNode = 
 	PokemonNodeType | 
@@ -80,6 +82,7 @@ export default function Page() {
   const [nodes, setNodes] = useState<AppNode[]>([]);
   const [edges, setEdges] = useState<Edge[]>(initialEdges);
 	const [addMon, setAddMon] = useState(false);
+	const { theme } = useTheme();
 
 	const addAbilityNode = useCallback((id: string, urls: string[]) => {
 		const abilityId = `${id}-abilityNode`;
@@ -235,6 +238,7 @@ export default function Page() {
         nodeTypes={nodeTypes}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
+				colorMode={theme as ColorMode ?? 'dark'}
         fitView
       >
 				<Background 

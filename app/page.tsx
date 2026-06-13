@@ -18,10 +18,12 @@ import {
   type Connection,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
+import { NatureName } from '@/data/natures';
 
 import pokemonSearchList from '@/data/pokemon.json'
 import PokemonSearchDialog from '@/components/PokemonSearchDialog';
 
+//#region nodes + types
 import { 
     PokemonStatType,
 	type PokemonType 
@@ -43,17 +45,33 @@ PokemonStatNode,
 	type PokemonStatNodeType
 }
 from '@/components/PokemonStatNode';
-import { NatureName } from '@/data/natures';
+import 
+PokemonMovesNode,
+{
+	type PokemonMovesNodeType,
+}
+from '@/components/PokemonMovesNode';
+import PokemonItemNode,
+{ 
+	type PokemonItemNodeType
+}
+from '@/components/PokemonItemNode';
+//#endregion
+
 
 type AppNode = 
 	PokemonNodeType | 
 	PokemonAbilityNodeType |
-	PokemonStatNodeType;
+	PokemonStatNodeType |
+	PokemonMovesNodeType |
+	PokemonItemNodeType;
 
 const nodeTypes = {
   pokemonNode: PokemonNode,
   pokemonAbilityNode: PokemonAbilityNode,
-	pokemonStatNode: PokemonStatNode
+	pokemonStatNode: PokemonStatNode,
+	pokemonMovesNode: PokemonMovesNode,
+	pokemonItemsNode: PokemonItemNode,
 };
 
 const initialEdges: Edge[] = [];
@@ -118,6 +136,56 @@ export default function Page() {
 		});
 	}, []);
 
+	const addMovesNode = useCallback((id: string, movePool: string[]) => {
+		const moveId = `${id}-movesNode`;
+		setNodes(prev => {
+			if (prev.some(node => node.id === moveId)) return prev;
+			const parent = prev.find(node => node.id === id);
+			const parentX = parent?.position.x ?? 0;
+			const parentY = parent?.position.y ?? 0;
+			return [
+				...prev,
+				{
+					id: moveId,
+					type: 'pokemonMovesNode',
+					position: { x: parentX - 200, y: parentY },
+					data: { movePool },
+				},
+			];
+		});
+
+		setEdges(prev => {
+			const edgeId = `${id}-${moveId}`;
+			if (prev.some(edge => edge.id === edgeId)) return prev;
+			return [...prev, { id: edgeId, source: id, sourceHandle: `${id}-moves`, target: moveId }];
+		});
+	}, []);
+
+	const addItemsNode = useCallback((id: string) => {
+		const itemId = `${id}-itemNode`;
+		setNodes(prev => {
+			if (prev.some(node => node.id === itemId)) return prev;
+			const parent = prev.find(node => node.id === id);
+			const parentX = parent?.position.x ?? 0;
+			const parentY = parent?.position.y ?? 0;
+			return [
+				...prev,
+				{
+					id: itemId,
+					type: 'pokemonItemsNode',
+					position: { x: parentX + 200, y: parentY },
+					data: {},
+				},
+			];
+		});
+
+		setEdges(prev => {
+			const edgeId = `${id}-${itemId}`;
+			if (prev.some(edge => edge.id === edgeId)) return prev;
+			return [...prev, { id: edgeId, source: id, sourceHandle: `${id}-items`, target: itemId }];
+		});
+	}, []);
+
 	const addPokemonNode = useCallback(async (name: string) => {
 		const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${name}`);
 		const data: PokemonType = await res.json();
@@ -132,10 +200,12 @@ export default function Page() {
 					...data,
 					onExpandAbility: addAbilityNode, 
 					onExpandStats: addStatNode,
+					onExpandMoves: addMovesNode,
+					onExpandItems: addItemsNode,
 				},
 			},
 		]);
-	}, [addAbilityNode, addStatNode]);
+	}, [addAbilityNode, addStatNode, addMovesNode, addItemsNode]);
 
   const onNodesChange = useCallback(
     (changes: NodeChange<AppNode>[]) =>

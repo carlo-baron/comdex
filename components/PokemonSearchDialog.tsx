@@ -69,7 +69,7 @@ export default function PokemonSearchDialog(
 				onScroll={handleScroll}
 				>
 					<div 
-					className="mon-list flex flex-col gap-2"
+					className="p-2 mon-list flex flex-col gap-2"
 					>
 						{
 							searchList

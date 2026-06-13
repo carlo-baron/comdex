@@ -33,8 +33,8 @@ function PokemonStatNode({ id, selected, data }: NodeProps<PokemonStatNodeType>)
 		'special-attack': 0, 'special-defense': 0, speed: 0
 	});
 	const [ivs, setIvs] = useState<Record<string, number>>({
-		hp: 0, attack: 0, defense: 0,
-		'special-attack': 0, 'special-defense': 0, speed: 0
+		hp: 31, attack: 31, defense: 31,
+		'special-attack': 31, 'special-defense': 31, speed: 31
 	});
 
 	const totalEvs = useMemo(() => 

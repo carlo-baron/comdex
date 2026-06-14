@@ -1,8 +1,8 @@
 "use client";
 import { memo, useMemo } from 'react';
-import { Button } from './ui/button';
-import { ChevronDown } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 import { title } from '@/utils/titleCase';
+import { Separator } from './ui/separator';
 import { useState, useEffect } from 'react';
 import { NodeProps, Node, Handle, Position } from '@xyflow/react';
 import {
@@ -12,16 +12,12 @@ import {
   CardTitle,
 	CardContent
 } from "./ui/card";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible"
 import { type AbilityEntryType } from '@/types/pokemon';
 
 export type PokemonAbilityNodeType = Node<{ urls: string[] }, 'pokemonAbilityNode'>;
 
 function PokemonAbilityNode({ selected, data }: NodeProps<PokemonAbilityNodeType>) {
+	const [selectedAbility, setSelectedAbility] = useState<AbilityEntryType | null>(null);
   const [abilities, setAbilities] = useState<AbilityEntryType[]>([]);
 
   useEffect(() => {
@@ -43,24 +39,18 @@ function PokemonAbilityNode({ selected, data }: NodeProps<PokemonAbilityNodeType
 	const abilityMap = useMemo(() => {
 		return abilities.map((ability, index) => {
 			return(
-				<Collapsible
+				<Card
 				key={index}
-				className='group'
+				className='mb-2 cursor-pointer p-0'
+				onClick={() => setSelectedAbility(ability)}
 				>
-				<CollapsibleTrigger asChild>
-				<Button
-				className="nodrag text-xl font-bold w-full"
-				onClick={(e) => e.stopPropagation()}
-				variant='ghost'
-				>
-				{title(ability.name)}
-				<ChevronDown className='ml-auto transition-transform group-data-[state=open]:rotate-180' />
-				</Button>
-				</CollapsibleTrigger>
-				<CollapsibleContent>
-				{ability.effect_entries.find(entry => entry.language.name === 'en')?.short_effect}
-				</CollapsibleContent>
-				</Collapsible>
+					<CardContent className='flex flex-col gap-2 px-4 py-2'>
+						<p className='font-bold text-md text-center'>{title(ability.name)}</p>
+						<p className='text-center'>
+							{ability.effect_entries.find(entry => entry.language.name === 'en')?.short_effect}
+						</p>
+					</CardContent>
+				</Card>
 			);
 		})
 	}, [abilities]);
@@ -76,10 +66,33 @@ function PokemonAbilityNode({ selected, data }: NodeProps<PokemonAbilityNodeType
 					Learn all possible abilities for this pokemon
         </CardDescription>
       </CardHeader>
-			<CardContent>
-				{
-					abilityMap
-				}
+			<CardContent className='nodrag nowheel cursor-pointer'>
+				<Card className="p-0 mb-2">
+					<CardContent className="px-4 py-2">
+						{selectedAbility === null ? 
+							(
+								<span className='w-full flex justify-center'><Plus /></span>
+							) 
+								: 
+							(
+								<div className="flex flex-col gap-2 relative">
+									<X 
+									className='absolute right-0 top-0'
+									onClick={() => setSelectedAbility(null)}
+									/>
+									<span className='flex gap-2 items-center justify-center'>
+										<p className="font-bold text-lg">
+											{title(selectedAbility.name)}
+										</p>
+									</span>
+									<p className='text-center w-full'>{selectedAbility.effect_entries.find(entry => entry.language.name === 'en')?.short_effect}</p>
+								</div>
+							)
+						}
+					</CardContent>
+				</Card>
+				<Separator className='my-4 '/>
+				{abilityMap}
 			</CardContent>
     </Card>
   );

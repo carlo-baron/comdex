@@ -12,10 +12,12 @@ import {
 	BackgroundVariant,
 	Controls,
 	Panel,
+	MiniMap,
   type Edge,
   type NodeChange,
   type EdgeChange,
   type Connection,
+  type ColorMode,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { NatureName } from '@/data/natures';
@@ -56,15 +58,22 @@ import PokemonItemNode,
 	type PokemonItemNodeType
 }
 from '@/components/PokemonItemNode';
+import PokemonEvolutionNode,
+{
+	type PokemonEvolutionNodeType
+}
+from '@/components/PokemonEvolutionNode';
 //#endregion
 
+import { useTheme } from "next-themes"
 
 type AppNode = 
 	PokemonNodeType | 
 	PokemonAbilityNodeType |
 	PokemonStatNodeType |
 	PokemonMovesNodeType |
-	PokemonItemNodeType;
+	PokemonItemNodeType |
+	PokemonEvolutionNodeType;
 
 const nodeTypes = {
   pokemonNode: PokemonNode,
@@ -72,6 +81,7 @@ const nodeTypes = {
 	pokemonStatNode: PokemonStatNode,
 	pokemonMovesNode: PokemonMovesNode,
 	pokemonItemsNode: PokemonItemNode,
+	pokemonEvolutionNode: PokemonEvolutionNode,
 };
 
 const initialEdges: Edge[] = [];
@@ -80,20 +90,19 @@ export default function Page() {
   const [nodes, setNodes] = useState<AppNode[]>([]);
   const [edges, setEdges] = useState<Edge[]>(initialEdges);
 	const [addMon, setAddMon] = useState(false);
+	const { theme } = useTheme();
 
 	const addAbilityNode = useCallback((id: string, urls: string[]) => {
 		const abilityId = `${id}-abilityNode`;
 		setNodes(prev => {
 			if (prev.some(node => node.id === abilityId)) return prev;
-			const parent = prev.find(node => node.id === id);
-			const parentX = parent?.position.x ?? 0;
-			const parentY = parent?.position.y ?? 0;
 			return [
 				...prev,
 				{
 					id: abilityId,
 					type: 'pokemonAbilityNode',
-					position: { x: parentX + 200, y: parentY },
+					position: { x: 300, y: 0 },
+					parentId: id,
 					data: { urls },
 				},
 			];
@@ -115,15 +124,13 @@ export default function Page() {
 		const statNodeId = `${id}-statNode`;
 		setNodes(prev => {
 			if (prev.some(node => node.id === statNodeId)) return prev;
-			const parent = prev.find(node => node.id === id);
-			const parentX = parent?.position.x ?? 0;
-			const parentY = parent?.position.y ?? 0;
 			return [
 				...prev,
 				{
 					id: statNodeId,
 					type: 'pokemonStatNode',
-					position: { x: parentX - 200, y: parentY },
+					parentId: id,
+					position: { x: -400, y: 0 },
 					data: { stats, level, nature },
 				},
 			];
@@ -140,15 +147,13 @@ export default function Page() {
 		const moveId = `${id}-movesNode`;
 		setNodes(prev => {
 			if (prev.some(node => node.id === moveId)) return prev;
-			const parent = prev.find(node => node.id === id);
-			const parentX = parent?.position.x ?? 0;
-			const parentY = parent?.position.y ?? 0;
 			return [
 				...prev,
 				{
 					id: moveId,
+					parentId: id,
 					type: 'pokemonMovesNode',
-					position: { x: parentX - 200, y: parentY },
+					position: { x: -400, y: 100 },
 					data: { movePool },
 				},
 			];
@@ -165,15 +170,13 @@ export default function Page() {
 		const itemId = `${id}-itemNode`;
 		setNodes(prev => {
 			if (prev.some(node => node.id === itemId)) return prev;
-			const parent = prev.find(node => node.id === id);
-			const parentX = parent?.position.x ?? 0;
-			const parentY = parent?.position.y ?? 0;
 			return [
 				...prev,
 				{
 					id: itemId,
 					type: 'pokemonItemsNode',
-					position: { x: parentX + 200, y: parentY },
+					parentId: id,
+					position: { x: 300, y: 100 },
 					data: {},
 				},
 			];
@@ -183,6 +186,29 @@ export default function Page() {
 			const edgeId = `${id}-${itemId}`;
 			if (prev.some(edge => edge.id === edgeId)) return prev;
 			return [...prev, { id: edgeId, source: id, sourceHandle: `${id}-items`, target: itemId }];
+		});
+	}, []);
+
+	const addEvolutionNode = useCallback((id: string, name: string, sprite: string) => {
+		const evoId = `${id}-evolutionNode`;
+		setNodes(prev => {
+			if (prev.some(node => node.id === evoId)) return prev;
+			return [
+				...prev,
+				{
+					id: evoId,
+					type: 'pokemonEvolutionNode',
+					parentId: id,
+					position: { x: -50, y: 400 },
+					data: { name: name, sprite: sprite},
+				},
+			];
+		});
+
+		setEdges(prev => {
+			const edgeId = `${id}-${evoId}`;
+			if (prev.some(edge => edge.id === edgeId)) return prev;
+			return [...prev, { id: edgeId, source: id, sourceHandle: `${id}-evolution`, target: evoId }];
 		});
 	}, []);
 
@@ -202,10 +228,11 @@ export default function Page() {
 					onExpandStats: addStatNode,
 					onExpandMoves: addMovesNode,
 					onExpandItems: addItemsNode,
+					onExpandEvolution: addEvolutionNode
 				},
 			},
 		]);
-	}, [addAbilityNode, addStatNode, addMovesNode, addItemsNode]);
+	}, [addAbilityNode, addStatNode, addMovesNode, addItemsNode, addEvolutionNode]);
 
   const onNodesChange = useCallback(
     (changes: NodeChange<AppNode>[]) =>
@@ -235,6 +262,7 @@ export default function Page() {
         nodeTypes={nodeTypes}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
+				colorMode={theme as ColorMode ?? 'dark'}
         fitView
       >
 				<Background 
@@ -243,8 +271,8 @@ export default function Page() {
 				size={1}
 				/>
 				<Controls 
-				position='bottom-right'
-				orientation='horizontal'
+				position='center-right'
+				orientation='vertical'
 				/>
 				<Panel
 				position='top-center'
@@ -262,6 +290,7 @@ export default function Page() {
 					onAdd={addPokemonNode}
 					/>
 				</Panel>
+				<MiniMap />
 			</ReactFlow>
     </div>
   );

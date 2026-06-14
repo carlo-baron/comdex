@@ -18,6 +18,7 @@ import { Plus } from 'lucide-react';
 import items from '@/data/items.json';
 import { ItemType } from '@/types/items';
 import { Input } from './ui/input';
+import { X } from 'lucide-react';
 
 export type PokemonItemNodeType = Node<Record<string, never>, 'pokemonItemsNode'>;
 
@@ -70,7 +71,11 @@ function PokemonItemNode({ selected }: NodeProps<PokemonItemNodeType>) {
 							) 
 								: 
 							(
-								<div className="flex flex-col gap-2">
+								<div className="flex flex-col gap-2 relative">
+									<X 
+									className='absolute right-0 top-0'
+									onClick={() => setSelectedItem(null)}
+									/>
 									<span className='flex gap-2 items-center justify-center'>
 										<img 
 										src={selectedItem.sprite ?? '/missing_sprite.png'}

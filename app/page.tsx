@@ -12,6 +12,7 @@ import {
 	BackgroundVariant,
 	Controls,
 	Panel,
+	MiniMap,
   type Edge,
   type NodeChange,
   type EdgeChange,
@@ -95,15 +96,13 @@ export default function Page() {
 		const abilityId = `${id}-abilityNode`;
 		setNodes(prev => {
 			if (prev.some(node => node.id === abilityId)) return prev;
-			const parent = prev.find(node => node.id === id);
-			const parentX = parent?.position.x ?? 0;
-			const parentY = parent?.position.y ?? 0;
 			return [
 				...prev,
 				{
 					id: abilityId,
 					type: 'pokemonAbilityNode',
-					position: { x: parentX + 200, y: parentY },
+					position: { x: 300, y: 0 },
+					parentId: id,
 					data: { urls },
 				},
 			];
@@ -125,15 +124,13 @@ export default function Page() {
 		const statNodeId = `${id}-statNode`;
 		setNodes(prev => {
 			if (prev.some(node => node.id === statNodeId)) return prev;
-			const parent = prev.find(node => node.id === id);
-			const parentX = parent?.position.x ?? 0;
-			const parentY = parent?.position.y ?? 0;
 			return [
 				...prev,
 				{
 					id: statNodeId,
 					type: 'pokemonStatNode',
-					position: { x: parentX - 200, y: parentY },
+					parentId: id,
+					position: { x: -400, y: 0 },
 					data: { stats, level, nature },
 				},
 			];
@@ -150,15 +147,13 @@ export default function Page() {
 		const moveId = `${id}-movesNode`;
 		setNodes(prev => {
 			if (prev.some(node => node.id === moveId)) return prev;
-			const parent = prev.find(node => node.id === id);
-			const parentX = parent?.position.x ?? 0;
-			const parentY = parent?.position.y ?? 0;
 			return [
 				...prev,
 				{
 					id: moveId,
+					parentId: id,
 					type: 'pokemonMovesNode',
-					position: { x: parentX - 200, y: parentY },
+					position: { x: -400, y: 100 },
 					data: { movePool },
 				},
 			];
@@ -175,15 +170,13 @@ export default function Page() {
 		const itemId = `${id}-itemNode`;
 		setNodes(prev => {
 			if (prev.some(node => node.id === itemId)) return prev;
-			const parent = prev.find(node => node.id === id);
-			const parentX = parent?.position.x ?? 0;
-			const parentY = parent?.position.y ?? 0;
 			return [
 				...prev,
 				{
 					id: itemId,
 					type: 'pokemonItemsNode',
-					position: { x: parentX + 200, y: parentY },
+					parentId: id,
+					position: { x: 300, y: 100 },
 					data: {},
 				},
 			];
@@ -200,15 +193,13 @@ export default function Page() {
 		const evoId = `${id}-evolutionNode`;
 		setNodes(prev => {
 			if (prev.some(node => node.id === evoId)) return prev;
-			const parent = prev.find(node => node.id === id);
-			const parentX = parent?.position.x ?? 0;
-			const parentY = parent?.position.y ?? 0;
 			return [
 				...prev,
 				{
 					id: evoId,
 					type: 'pokemonEvolutionNode',
-					position: { x: parentX, y: parentY + 400 },
+					parentId: id,
+					position: { x: -50, y: 400 },
 					data: { name: name, sprite: sprite},
 				},
 			];
@@ -280,8 +271,8 @@ export default function Page() {
 				size={1}
 				/>
 				<Controls 
-				position='bottom-right'
-				orientation='horizontal'
+				position='center-right'
+				orientation='vertical'
 				/>
 				<Panel
 				position='top-center'
@@ -299,6 +290,7 @@ export default function Page() {
 					onAdd={addPokemonNode}
 					/>
 				</Panel>
+				<MiniMap />
 			</ReactFlow>
     </div>
   );

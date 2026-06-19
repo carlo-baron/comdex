@@ -1,7 +1,8 @@
 "use client";
+import { title } from '@/utils/titleCase';
 import { Button } from '@/components/ui/button';
 import { useState, useCallback, useEffect } from 'react';
-import { Plus, Trash } from 'lucide-react';
+import { Plus, Trash, Clipboard } from 'lucide-react';
 import {
   ReactFlow,
   Background,
@@ -25,6 +26,7 @@ import PokemonEvolutionNode, { type PokemonEvolutionNodeType } from '@/component
 import { useTheme } from 'next-themes';
 import { useNodeStore } from '@/hooks/AppStore';
 import { usePokemonDataStore } from '@/hooks/PokemonDataStore';
+import { abbreviateStat } from '@/utils/abbreviateStat';
 
 export type AppNode =
   | PokemonNodeType
@@ -49,6 +51,7 @@ export default function Page() {
   const [addMon, setAddMon] = useState(false);
   const { resolvedTheme } = useTheme();
 	const removePokemonData = usePokemonDataStore(state => state.removePokemon);
+	const pokemons = usePokemonDataStore(state => state.pokemon);
 
   const nodes = useNodeStore(state => state.nodes);
   const edges = useNodeStore(state => state.edges);
@@ -60,6 +63,41 @@ export default function Page() {
   useEffect(() => {
     rehydrateCallbacks();
   }, [rehydrateCallbacks]);
+
+	const pokePasteCopy = useCallback(() => {
+		return Object.values(pokemons)
+			.map(e1 => {
+				if (!e1) return null;
+				const hasEv = Object.values(e1.evs).some(value => value > 0);
+				const hasIv = Object.values(e1.ivs).some(value => value > 0);
+				const name = title(e1.name);
+				const item = e1.selectedItem ? ' @ ' + title(e1.selectedItem.name) : '';
+				const ability = e1.selectedAbility ? `Ability: ${title(e1.selectedAbility.name)}` : '';
+				const evs = hasEv
+					? 'EVs: ' +
+						Object.entries(e1.evs)
+							.filter(([, value]) => value !== 0)
+							.map(([key, value]) => `${value} ${abbreviateStat(key)}`)
+							.join(' / ')
+					: '';
+				const ivs = hasIv
+					? 'IVs: ' +
+						Object.entries(e1.ivs)
+							.filter(([, value]) => value !== 0)
+							.map(([key, value]) => `${value} ${abbreviateStat(key)}`)
+							.join(' / ')
+					: '';
+				const nature = `${title(e1.nature)} Nature`;
+				const moves = Object.values(e1.selectedMoves)
+					.filter(move => move !== null)
+					.map(move => "- " + title(move.name))
+					.join("\n");
+
+				return `${name + item}\n${ability}\n${evs}\n${ivs}\n${nature}\n${moves}`;
+			})
+			.filter(Boolean)
+			.join("\n\n");
+	}, [pokemons]);
 
   const handleAddPokemon = useCallback(
     async (name: string) => {
@@ -93,6 +131,17 @@ export default function Page() {
           position="center-right"
           orientation="vertical"
         />
+				<Panel position="top-right">
+					{
+						nodes.length > 0 && (
+							<Button
+							onClick={() => navigator.clipboard.writeText(pokePasteCopy())}
+							>
+								<Clipboard />
+							</Button>
+						)
+					}
+				</Panel>
         <Panel position="top-center">
 					<div className="flex gap-2">
 						<Button onClick={() => setAddMon(true)}>

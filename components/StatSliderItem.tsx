@@ -3,7 +3,7 @@
 import { memo } from 'react';
 import { title } from '@/utils/titleCase';
 import { Slider } from './ui/slider';
-import { abbreviateStat } from './StatRadarChart';
+import { abbreviateStat } from '@/utils/abbreviateStat';
 
 interface StatSliderItemProps{
 	stat: {

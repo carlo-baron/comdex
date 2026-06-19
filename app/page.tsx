@@ -24,6 +24,7 @@ import PokemonItemNode, { type PokemonItemNodeType } from '@/components/PokemonI
 import PokemonEvolutionNode, { type PokemonEvolutionNodeType } from '@/components/PokemonEvolutionNode';
 import { useTheme } from 'next-themes';
 import { useNodeStore } from '@/hooks/AppStore';
+import { usePokemonDataStore } from '@/hooks/PokemonDataStore';
 
 export type AppNode =
   | PokemonNodeType
@@ -47,6 +48,7 @@ export default function Page() {
 	const { deleteElements } = useReactFlow();
   const [addMon, setAddMon] = useState(false);
   const { resolvedTheme } = useTheme();
+	const removePokemonData = usePokemonDataStore(state => state.removePokemon);
 
   const nodes = useNodeStore(state => state.nodes);
   const edges = useNodeStore(state => state.edges);
@@ -74,6 +76,7 @@ export default function Page() {
         selectionOnDrag
         nodes={nodes}
         edges={edges}
+				onNodesDelete={(nodes) => nodes.forEach(node => removePokemonData(node.id))}
 				onSelectionChange={(selected) => setSelectedNodes(selected.nodes)}
         nodeTypes={nodeTypes}
         onNodesChange={onNodesChange}

@@ -41,7 +41,7 @@ function PokemonMovesNode({ id, selected, data }: NodeProps<PokemonMovesNodeType
   const updatePokemon = usePokemonDataStore(state => state.updatePokemon);
 
 	const selectedMoves = useMemo(() => {
-		return pokemonData.selectedMoves ?? [null, null, null, null];
+		return pokemonData?.selectedMoves ?? [null, null, null, null];
 	}, [pokemonData]);
 
 	const viewportRef = useRef<HTMLDivElement | null>(null);

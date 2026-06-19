@@ -6,6 +6,7 @@ import { ItemType } from '@/types/items';
 import { AbilityEntryType } from '@/types/pokemon';
 
 export type PokemonData = {
+	name: string;
   level: number;
   nature: NatureName;
   evs: Record<string, number>;
@@ -16,8 +17,9 @@ export type PokemonData = {
 };
 
 const defaultPokemonData = (): PokemonData => ({
-  level: 50,
-  nature: 'hardy',
+	name: 'pikachu',
+  level: 100,
+  nature: 'sassy',
   evs: {
     hp: 0,
     attack: 0,

@@ -1,8 +1,8 @@
 "use client";
 import Image from 'next/image';
 import { Badge } from './ui/badge';
-import { useEffect, useRef, useMemo, memo, useCallback, useState } from 'react';
-import { NodeProps, Node, Handle, Position, useReactFlow } from '@xyflow/react';
+import { useRef, useMemo, memo, useCallback } from 'react';
+import { NodeProps, Node, Handle, Position } from '@xyflow/react';
 import { Volume2 } from 'lucide-react';
 import { Input } from './ui/input';
 import {
@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import type { PokemonStatType, PokemonType } from '@/types/pokemon';
 import { natures, type NatureName } from '@/data/natures';
+import { usePokemonDataStore } from '@/hooks/PokemonDataStore';
 
 type PokemonNodeProps = {
   onExpandAbility: (id: string, urls: string[]) => void;
@@ -37,14 +38,11 @@ const PokemonNode = memo(function PokemonNode({
   data,
 }: NodeProps<PokemonNodeType>) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [nature, setNature] = useState<NatureName>('sassy');
-  const [level, setLevel] = useState<number>(100);
-	const { updateNodeData } = useReactFlow();
+	const pokemonData = usePokemonDataStore(state => state.pokemon[id]);
+	const updatePokemonData = usePokemonDataStore(state => state.updatePokemon);
 
-	useEffect(() => {
-		const statNodeId = `${id}-statNode`;
-		updateNodeData(statNodeId, { level, nature });
-	}, [level, nature, id, updateNodeData]);
+	const nature = useMemo(() => pokemonData?.nature ?? 'sassy', [pokemonData]);
+	const level = useMemo(() => pokemonData?.level ?? 100, [pokemonData]);
 
   const handleCryClick = useCallback(() => {
     audioRef.current?.play();
@@ -105,7 +103,7 @@ const PokemonNode = memo(function PokemonNode({
             value={level}
             onChange={(e) => {
               const val = Math.min(100, Math.max(1, Number(e.target.value)));
-              setLevel(val);
+							updatePokemonData(id, { level: val });
             }}
             onKeyDown={(e) => e.stopPropagation()}
             min={1}
@@ -117,7 +115,7 @@ const PokemonNode = memo(function PokemonNode({
           <p>Nature:</p>
           <Select
             value={nature}
-            onValueChange={(val) => setNature(val as NatureName)}
+            onValueChange={(val) => updatePokemonData(id, { nature: val })}
           >
             <SelectTrigger>
               <SelectValue placeholder="Choose a Nature" />

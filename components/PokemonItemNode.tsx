@@ -30,7 +30,7 @@ function PokemonItemNode({ id, selected }: NodeProps<PokemonItemNodeType>) {
   const pokemonData = usePokemonDataStore(state => state.pokemon[parentId]);
   const updatePokemon = usePokemonDataStore(state => state.updatePokemon);
 
-	const selectedItem = pokemonData.selectedItem;
+	const selectedItem = useMemo(() => pokemonData?.selectedItem ?? null, [pokemonData]);
 
 	const viewportRef = useRef<HTMLDivElement | null>(null);
 

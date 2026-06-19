@@ -1,7 +1,7 @@
 "use client";
 import { Button } from '@/components/ui/button';
 import { useState, useCallback, useEffect } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Trash } from 'lucide-react';
 import {
   ReactFlow,
   Background,
@@ -10,6 +10,7 @@ import {
   Panel,
   MiniMap,
   type ColorMode,
+	useReactFlow,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import pokemonSearchList from '@/data/pokemon.json';
@@ -42,6 +43,8 @@ const nodeTypes = {
 };
 
 export default function Page() {
+	const [selectedNodes, setSelectedNodes] = useState<AppNode[]>([]);
+	const { deleteElements } = useReactFlow();
   const [addMon, setAddMon] = useState(false);
   const { resolvedTheme } = useTheme();
 
@@ -71,6 +74,7 @@ export default function Page() {
         selectionOnDrag
         nodes={nodes}
         edges={edges}
+				onSelectionChange={(selected) => setSelectedNodes(selected.nodes)}
         nodeTypes={nodeTypes}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
@@ -87,10 +91,24 @@ export default function Page() {
           orientation="vertical"
         />
         <Panel position="top-center">
-          <Button onClick={() => setAddMon(true)}>
-            Add
-            <Plus />
-          </Button>
+					<div className="flex gap-2">
+						<Button onClick={() => setAddMon(true)}>
+							Add
+							<Plus />
+						</Button>
+
+						{
+							selectedNodes.length > 0 && (
+								<Button
+								variant='destructive'
+								onClick={() => deleteElements({ nodes: selectedNodes })}
+								>
+									<Trash />
+								</Button>
+							)
+						}
+					</div>
+
           <PokemonSearchDialog
             open={addMon}
             onOpenChange={() => setAddMon(prev => !prev)}

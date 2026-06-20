@@ -21,7 +21,7 @@ type NodeStore = {
 	nodes: AppNode[];
 	edges: Edge[];
 
-	addPokemonNode: (pokemon: PokemonType) => void;
+	addPokemonNode: (pokemon: PokemonType, position: { x: number, y: number }) => void;
 	addAbilityNode: (id: string, urls: string[]) => void;
 	addStatNode: (id: string, stats: PokemonStatType[], level: number, nature: NatureName) => void;
 	addMovesNode: (id: string, movePool: string[]) => void;
@@ -39,11 +39,12 @@ export const useNodeStore = create<NodeStore>()(
 			nodes: [],
 			edges: [],
 
-			addPokemonNode: pokemon => {
+			addPokemonNode: ( pokemon, position = { x: 0, y: 0} ) => {
 				const id = crypto.randomUUID();
 				const store = useNodeStore.getState();
 
 				usePokemonDataStore.getState().initPokemon(id);
+				usePokemonDataStore.getState().updatePokemon(id, { name: pokemon.name });
 
 				set(state => ({
 					nodes: [
@@ -51,7 +52,7 @@ export const useNodeStore = create<NodeStore>()(
 						{
 							id,
 							type: 'pokemonNode',
-							position: { x: 0, y: 0 },
+							position,
 							data: {
 								...pokemon,
 								onExpandAbility: store.addAbilityNode,

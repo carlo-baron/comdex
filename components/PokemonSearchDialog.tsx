@@ -1,4 +1,5 @@
 "use client";
+import { title } from "@/utils/titleCase";
 import { 
 	useState,
 	useRef,
@@ -115,7 +116,7 @@ function PokemonListItem(
 				className='aspect-square w-15'
 				/>
 				<div className="info">
-					<p className="font-bold text-md">{data.name}</p>
+					<p className="font-bold text-md">{title(data.name)}</p>
 					<span className="flex gap-4">
 						{
 							data.types.map(( type, index ) => {

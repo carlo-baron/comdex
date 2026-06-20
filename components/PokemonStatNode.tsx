@@ -13,7 +13,6 @@ import {
 } from "./ui/card";
 import StatRadarChart from './StatRadarChart';
 import { PokemonStatType } from '@/types/pokemon';
-import { NatureName } from '@/data/natures';
 import { natures } from '@/data/natures';
 import { StatSliderItem } from './StatSliderItem';
 import { EvIvSliderItem } from './EvIvSlider';
@@ -21,8 +20,6 @@ import { usePokemonDataStore } from '@/hooks/PokemonDataStore';
 
 export type PokemonStatProps = {
   stats: PokemonStatType[];
-  level: number;
-  nature: NatureName;
 };
 
 export type PokemonStatNodeType = Node<PokemonStatProps, 'pokemonStatNode'>;
@@ -32,6 +29,9 @@ function PokemonStatNode({ id, selected, data }: NodeProps<PokemonStatNodeType>)
   const parentId = id.replace('-statNode', '');
   const pokemonData = usePokemonDataStore(state => state.pokemon[parentId]);
   const updatePokemon = usePokemonDataStore(state => state.updatePokemon);
+
+	const nature = useMemo(() => pokemonData?.nature ?? 'sassy', [pokemonData]);
+	const level = useMemo(() => pokemonData?.level ?? 100, [pokemonData]);
 
 	const evs = useMemo(() => {
 		return pokemonData?.evs ?? {
@@ -82,7 +82,7 @@ function PokemonStatNode({ id, selected, data }: NodeProps<PokemonStatNodeType>)
         ? Math.floor(((2 * stat.base_stat + 31 + Math.floor(252 / 4)) * 100) / 100) + 100 + 10
         : Math.floor(maxVal * 1.1);
 
-      const natureObj = natures.find(n => n.name === data.nature);
+      const natureObj = natures.find(n => n.name === nature);
       const statName = stat.stat.name;
 
       const natureMult =
@@ -91,11 +91,11 @@ function PokemonStatNode({ id, selected, data }: NodeProps<PokemonStatNodeType>)
         1;
 
       const statValNum = Math.floor(
-        Math.floor(((2 * stat.base_stat + ivs[statName] + Math.floor(evs[statName] / 4)) * data.level) / 100) + 5
+        Math.floor(((2 * stat.base_stat + ivs[statName] + Math.floor(evs[statName] / 4)) * level) / 100) + 5
       );
 
       const statVal = stat.stat.name === 'hp'
-        ? Math.floor(((2 * stat.base_stat + ivs[statName] + Math.floor(evs[statName] / 4)) * data.level) / 100) + data.level + 10
+        ? Math.floor(((2 * stat.base_stat + ivs[statName] + Math.floor(evs[statName] / 4)) * level) / 100) + level + 10
         : Math.floor(statValNum * natureMult);
 
       const natureChange: 'increase' | 'decrease' | null =
@@ -113,7 +113,7 @@ function PokemonStatNode({ id, selected, data }: NodeProps<PokemonStatNodeType>)
         natureChange,
       };
     });
-  }, [data.level, data.nature, evs, ivs, data.stats, isAffected]);
+  }, [level, nature, evs, ivs, data.stats, isAffected]);
 
   const bst = useMemo(() =>
     calculatedStats.reduce((acc, item) => acc + item.stat.value, 0),

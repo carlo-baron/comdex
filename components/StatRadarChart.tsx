@@ -18,19 +18,6 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
-
-export const abbreviateStat = (statName: string): string => {
-	const map: Record<string, string> = {
-		'attack': 'atk',
-		'defense': 'def',
-		'special-attack': 'sp.atk',
-		'special-defense': 'sp.def',
-		'speed': 'spd',
-		'hp': 'hp',
-	};
-	return map[statName] ?? statName;
-};
-
 type StatRadarChartStatType = {
 	name: string,
 	value: number

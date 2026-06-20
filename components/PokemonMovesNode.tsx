@@ -23,7 +23,9 @@ export type PokemonMovesNodeProps = {
 	movePool: string[]
 }
 export type PokemonMovesNodeType = Node<PokemonMovesNodeProps, 'pokemonMovesNode'>;
-function PokemonMovesNode({ selected, data }: NodeProps<PokemonMovesNodeType>) {
+import { usePokemonDataStore } from '@/hooks/PokemonDataStore';
+
+function PokemonMovesNode({ id, selected, data }: NodeProps<PokemonMovesNodeType>) {
 	const [query, setQuery] = useState('');
 	const [limit, setLimit] = useState(20);
 	const [learnableMoves] = useState<MoveType[]>(
@@ -33,7 +35,15 @@ function PokemonMovesNode({ selected, data }: NodeProps<PokemonMovesNodeType>) {
 			)
 	);
 	const [selectedCard, setSelectedCard] = useState(0);
-	const [selectedMoves, setSelectedMoves] = useState<(MoveType | null)[]>([null, null, null, null]);
+
+  const parentId = id.replace('-movesNode', '');
+  const pokemonData = usePokemonDataStore(state => state.pokemon[parentId]);
+  const updatePokemon = usePokemonDataStore(state => state.updatePokemon);
+
+	const selectedMoves = useMemo(() => {
+		return pokemonData?.selectedMoves ?? [null, null, null, null];
+	}, [pokemonData]);
+
 	const viewportRef = useRef<HTMLDivElement | null>(null);
 	const handleScroll = () => {
 		const el = viewportRef.current;
@@ -46,24 +56,25 @@ function PokemonMovesNode({ selected, data }: NodeProps<PokemonMovesNodeType>) {
 		}
 	};
 	const handleSelectMove = useCallback((move: MoveType) => {
-		setSelectedMoves(prev => {
-			const next = [...prev];
-			next[selectedCard] = move;
-			return next;
+		const next = [...selectedMoves];
+		next[selectedCard] = move;
+		updatePokemon(parentId, {
+			selectedMoves: next	
 		});
 		setSelectedCard(prev => {
 			const nextEmpty = selectedMoves.findIndex((m, i) => i !== selectedCard && m === null);
 			return nextEmpty === -1 ? prev : nextEmpty;
 		});
-	}, [selectedCard, selectedMoves]);
+	}, [selectedCard, selectedMoves, updatePokemon, parentId]);
 	const handleRemoveMove = useCallback((index: number) => {
-		setSelectedMoves(prev => {
-			const next = [...prev];
-			next[index] = null;
-			return next;
+		const next = [...selectedMoves];
+		next[index] = null;
+		updatePokemon(parentId, {
+			selectedMoves: next	
 		});
+
 		setSelectedCard(index);
-	}, []);
+	}, [parentId, updatePokemon, selectedMoves]);
 
 	const moveMap = useMemo(() => {
 		return learnableMoves

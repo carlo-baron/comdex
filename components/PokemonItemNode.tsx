@@ -19,13 +19,19 @@ import items from '@/data/items.json';
 import { ItemType } from '@/types/items';
 import { Input } from './ui/input';
 import { X } from 'lucide-react';
+import { usePokemonDataStore } from '@/hooks/PokemonDataStore';
 
 export type PokemonItemNodeType = Node<Record<string, never>, 'pokemonItemsNode'>;
 
-function PokemonItemNode({ selected }: NodeProps<PokemonItemNodeType>) {
-	const [selectedItem, setSelectedItem] = useState<ItemType | null>(null);
+function PokemonItemNode({ id, selected }: NodeProps<PokemonItemNodeType>) {
 	const [query, setQuery] = useState('');
 	const [limit, setLimit] = useState(20);
+  const parentId = id.replace('-itemNode', '');
+  const pokemonData = usePokemonDataStore(state => state.pokemon[parentId]);
+  const updatePokemon = usePokemonDataStore(state => state.updatePokemon);
+
+	const selectedItem = useMemo(() => pokemonData?.selectedItem ?? null, [pokemonData]);
+
 	const viewportRef = useRef<HTMLDivElement | null>(null);
 
 	const handleScroll = () => {
@@ -47,9 +53,9 @@ function PokemonItemNode({ selected }: NodeProps<PokemonItemNodeType>) {
 					 <ItemCard 
 					 key={item.id}
 					 item={item as ItemType}
-					 onSelect={(item) => setSelectedItem(item)}
+					 onSelect={(item) => updatePokemon(parentId, { selectedItem: item })}
 					 />)
-	}, [limit, query]);
+	}, [limit, query, parentId, updatePokemon]);
 
 	return (
 		<Card className={`w-80 ${selected ? 'ring-2 ring-primary' : ''}`}>
@@ -74,7 +80,7 @@ function PokemonItemNode({ selected }: NodeProps<PokemonItemNodeType>) {
 								<div className="flex flex-col gap-2 relative">
 									<X 
 									className='absolute right-0 top-0'
-									onClick={() => setSelectedItem(null)}
+									onClick={() => updatePokemon(parentId, { selectedItem: null })}
 									/>
 									<span className='flex gap-2 items-center justify-center'>
 										<img 

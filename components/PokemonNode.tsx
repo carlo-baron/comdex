@@ -6,28 +6,30 @@ import { NodeProps, Node, Handle, Position } from '@xyflow/react';
 import { Volume2 } from 'lucide-react';
 import { Input } from './ui/input';
 import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from "@/components/ui/combobox"
+import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "./ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import type { PokemonStatType, PokemonType } from '@/types/pokemon';
-import { natures, type NatureName } from '@/data/natures';
+import { natures, type NatureName, type PokemonNatureType } from '@/data/natures';
 import { usePokemonDataStore } from '@/hooks/PokemonDataStore';
+import { abbreviateStat } from '@/utils/abbreviateStat';
 
 type PokemonNodeProps = {
   onExpandAbility: (id: string, urls: string[]) => void;
   onExpandStats: (id: string, stats: PokemonStatType[], level: number, nature: NatureName) => void;
-	onExpandMoves: (id: string, movePool: string[]) => void;
-	onExpandItems: (id: string) => void;
-	onExpandEvolution: (id: string, name: string, sprite: string) => void;
+  onExpandMoves: (id: string, movePool: string[]) => void;
+  onExpandItems: (id: string) => void;
+  onExpandEvolution: (id: string, name: string, sprite: string) => void;
 } & PokemonType;
 
 export type PokemonNodeType = Node<PokemonNodeProps, 'pokemonNode'>;
@@ -38,11 +40,16 @@ const PokemonNode = memo(function PokemonNode({
   data,
 }: NodeProps<PokemonNodeType>) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
-	const pokemonData = usePokemonDataStore(state => state.pokemon[id]);
-	const updatePokemonData = usePokemonDataStore(state => state.updatePokemon);
+  const pokemonData = usePokemonDataStore(state => state.pokemon[id]);
+  const updatePokemonData = usePokemonDataStore(state => state.updatePokemon);
 
-	const nature = useMemo(() => pokemonData?.nature ?? 'sassy', [pokemonData]);
-	const level = useMemo(() => pokemonData?.level ?? 100, [pokemonData]);
+  const nature = useMemo(() => pokemonData?.nature ?? 'sassy', [pokemonData]);
+  const level = useMemo(() => pokemonData?.level ?? 100, [pokemonData]);
+
+  const selectedNatureObj = useMemo(
+    () => natures.find(n => n.name === nature) ?? null,
+    [nature]
+  );
 
   const handleCryClick = useCallback(() => {
     audioRef.current?.play();
@@ -63,14 +70,12 @@ const PokemonNode = memo(function PokemonNode({
     [data.types]
   );
 
-	// TODO: change to combobox
-	const natureOptions = useMemo(() => {
-		return natures.map((nature, index) => (
-      <SelectItem value={nature.name} key={index}>
-        {nature.name[0].toUpperCase() + nature.name.slice(1)}
-      </SelectItem>
-    ));
-	}, []);
+  const getNatureLabel = useCallback((nature: PokemonNatureType) => {
+    const plus = nature.increased ? `${abbreviateStat(nature.increased)}+` : "";
+    const minus = nature.decreased ? `${abbreviateStat(nature.decreased)}-` : "";
+    const guide = plus && minus ? ` (${plus} ${minus})` : "";
+    return nature.name[0].toUpperCase() + nature.name.slice(1) + guide;
+  }, []);
 
   return (
     <Card className={`w-54 ${selected ? 'ring-2 ring-primary' : ''}`}>
@@ -83,7 +88,7 @@ const PokemonNode = memo(function PokemonNode({
         />
       </div>
 
-      <CardHeader>
+      <CardHeader className='p-2'>
         <CardTitle className="flex gap-2 items-center">
           {data.name}
           {audioElement}
@@ -91,7 +96,7 @@ const PokemonNode = memo(function PokemonNode({
 
         <span className="flex gap-2 items-center">{typeBadges}</span>
 
-        <span className="flex gap-2 items-center">
+        <span className="nodrag cursor-pointer flex gap-2 items-center">
           <p>Cry:</p>
           <Volume2 size={16} onClick={handleCryClick} />
         </span>
@@ -99,11 +104,12 @@ const PokemonNode = memo(function PokemonNode({
         <span className="flex gap-2 items-center level">
           <p>Lvl:</p>
           <Input
+            className='max-w-15'
             type="number"
             value={level}
             onChange={(e) => {
               const val = Math.min(100, Math.max(1, Number(e.target.value)));
-							updatePokemonData(id, { level: val });
+              updatePokemonData(id, { level: val });
             }}
             onKeyDown={(e) => e.stopPropagation()}
             min={1}
@@ -111,19 +117,28 @@ const PokemonNode = memo(function PokemonNode({
           />
         </span>
 
-        <span className="flex gap-2 items-center level">
+        <span className="nodrag flex gap-2 items-center level">
           <p>Nature:</p>
-          <Select
-            value={nature}
-            onValueChange={(val) => updatePokemonData(id, { nature: val })}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Choose a Nature" />
-            </SelectTrigger>
-            <SelectContent>
-							{natureOptions}
-            </SelectContent>
-          </Select>
+					<Combobox
+						items={natures.map(n => n.name)}
+						value={nature}
+						onValueChange={(val) => updatePokemonData(id, { nature: val ?? 'sassy' })}
+					>
+						<ComboboxInput placeholder="Select a nature" />
+						<ComboboxContent>
+							<ComboboxEmpty>No items found.</ComboboxEmpty>
+							<ComboboxList>
+								{(name) => {
+									const n = natures.find(nat => nat.name === name)!;
+									return (
+										<ComboboxItem value={name} key={name}>
+											{getNatureLabel(n)}
+										</ComboboxItem>
+									);
+								}}
+							</ComboboxList>
+						</ComboboxContent>
+					</Combobox>
         </span>
       </CardHeader>
 
@@ -153,10 +168,10 @@ const PokemonNode = memo(function PokemonNode({
               id={`${id}-abilities`}
             />
           </h2>
-          <h2 
-					className="font-extrabold"
-          onClick={() => data.onExpandMoves(id, data.moves.map(move => move.move.name))}
-					>
+          <h2
+            className="font-extrabold"
+            onClick={() => data.onExpandMoves(id, data.moves.map(move => move.move.name))}
+          >
             Moves
             <Handle
               position={Position.Left}
@@ -165,9 +180,10 @@ const PokemonNode = memo(function PokemonNode({
               id={`${id}-moves`}
             />
           </h2>
-          <h2 className="font-extrabold"
-          onClick={() => data.onExpandItems(id)}
-					>
+          <h2
+            className="font-extrabold"
+            onClick={() => data.onExpandItems(id)}
+          >
             Items
             <Handle
               position={Position.Right}
@@ -176,9 +192,10 @@ const PokemonNode = memo(function PokemonNode({
               id={`${id}-items`}
             />
           </h2>
-          <h2 className="col-span-2 font-extrabold"
-          onClick={() => data.onExpandEvolution(id, data.name, data.sprites.front_default)}
-					>
+          <h2
+            className="col-span-2 font-extrabold"
+            onClick={() => data.onExpandEvolution(id, data.name, data.sprites.front_default)}
+          >
             Evolution
             <Handle
               position={Position.Bottom}

@@ -27,6 +27,7 @@ import { useTheme } from 'next-themes';
 import { useNodeStore } from '@/hooks/AppStore';
 import { usePokemonDataStore } from '@/hooks/PokemonDataStore';
 import { abbreviateStat } from '@/utils/abbreviateStat';
+import { toast } from 'sonner';
 
 export type AppNode =
   | PokemonNodeType
@@ -135,7 +136,10 @@ export default function Page() {
 					{
 						nodes.length > 0 && (
 							<Button
-							onClick={() => navigator.clipboard.writeText(pokePasteCopy())}
+							onClick={() => {
+								navigator.clipboard.writeText(pokePasteCopy())
+								toast.success("Team Copied!")
+							}}
 							>
 								<Clipboard />
 							</Button>

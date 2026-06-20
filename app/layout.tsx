@@ -1,4 +1,5 @@
 import { Geist, Geist_Mono, Inter } from "next/font/google"
+import { Toaster } from "@/components/ui/sonner";
 import { ReactFlowProvider } from "@xyflow/react";
 
 import "./globals.css"
@@ -27,6 +28,7 @@ export default function RootLayout({
         <ThemeProvider>
 					<ReactFlowProvider>
 						{children}
+						<Toaster />
 					</ReactFlowProvider>
 				</ThemeProvider>
       </body>

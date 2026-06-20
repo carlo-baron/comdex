@@ -48,7 +48,7 @@ const nodeTypes = {
 
 export default function Page() {
 	const [selectedNodes, setSelectedNodes] = useState<AppNode[]>([]);
-	const { deleteElements } = useReactFlow();
+	const { deleteElements, screenToFlowPosition } = useReactFlow();
   const [addMon, setAddMon] = useState(false);
   const { resolvedTheme } = useTheme();
 	const removePokemonData = usePokemonDataStore(state => state.removePokemon);
@@ -104,9 +104,15 @@ export default function Page() {
     async (name: string) => {
       const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${name}`);
       const data: PokemonType = await res.json();
-      addPokemonNode(data);
+
+			const center = screenToFlowPosition({
+				x: window.innerWidth / 2 - 80,
+				y: window.innerHeight / 2 - 100
+			});
+
+      addPokemonNode(data, center);
     },
-    [addPokemonNode]
+    [addPokemonNode, screenToFlowPosition]
   );
 
   return (

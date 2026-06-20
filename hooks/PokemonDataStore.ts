@@ -18,7 +18,7 @@ export type PokemonData = {
 
 const defaultPokemonData = (): PokemonData => ({
 	name: 'pikachu',
-  level: 100,
+  level: 50,
   nature: 'sassy',
   evs: {
     hp: 0,

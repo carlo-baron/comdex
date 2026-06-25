@@ -46,6 +46,7 @@ export const useNodeStore = create<NodeStore>()(
 				usePokemonDataStore.getState().initPokemon(id);
 				usePokemonDataStore.getState().updatePokemon(id, { name: pokemon.name });
 				usePokemonDataStore.getState().updatePokemon(id, { types: pokemon.types });
+				usePokemonDataStore.getState().updatePokemon(id, { sprite: pokemon.sprites.front_default });
 
 				set(state => ({
 					nodes: [

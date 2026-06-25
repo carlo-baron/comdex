@@ -10,6 +10,7 @@ import {
 
 export type PokemonData = {
 	name: string;
+	sprite: string;
 	types: PokemonTypeType[];
   level: number;
   nature: NatureName;
@@ -22,6 +23,7 @@ export type PokemonData = {
 
 const defaultPokemonData = (): PokemonData => ({
 	name: 'pikachu',
+	sprite: '',
 	types: [{type: { name: 'electric' }}],
   level: 50,
   nature: 'sassy',

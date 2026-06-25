@@ -1,8 +1,6 @@
 "use client";
-
-import pokemons from '@/data/pokemon.json';
 import { title } from "@/utils/titleCase";
-import { useState, useRef } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -16,21 +14,21 @@ import {
 } from "./ui/card";
 import { usePokemonDataStore } from "@/hooks/PokemonDataStore";
 import type { PokemonData } from "@/hooks/PokemonDataStore";
-
 export default function BuiltMonsDialog(
 	{
 		open,
-		onOpenChange
+		onOpenChange,
+		onSelect,
 	}
 	:
 	{
 		open: boolean;
 		onOpenChange: () => void;
+		onSelect: (id: string) => void;
 	}
 ){
 	const pokemons = usePokemonDataStore(state => state.pokemon);
 	const [query, setQuery] = useState<string>('');
-
 	return(
 		<Dialog
 		open={open}
@@ -55,14 +53,14 @@ export default function BuiltMonsDialog(
 						className="p-2 mon-list flex flex-col gap-2"
 						>
 							{
-								Object.values(pokemons)
-									.filter(pokemon => pokemon.name.includes(query.toLowerCase()))
-									.map((pokemon, index) => {
+								Object.entries(pokemons)
+									.filter(([, pokemon]) => pokemon.name.includes(query.toLowerCase()))
+									.map(([id, pokemon]) => {
 										return(
 											<BuiltMonItem
-											key={index}
+											key={id}
 											data={pokemon}
-											onSelect={() => console.log()}
+											onSelect={() => onSelect(id)}
 											/>
 										);
 									})
@@ -74,7 +72,6 @@ export default function BuiltMonsDialog(
 		</Dialog>
 	);
 }
-
 function BuiltMonItem(
 	{
 		data,
@@ -83,22 +80,18 @@ function BuiltMonItem(
 	:
 	{
 		data: PokemonData;
-		onSelect: (name: string) => void;
+		onSelect: () => void;
 	}
 ){
-	const pokemonDataHelper = pokemons.find(pokemon => pokemon.name === data.name);
-	const sprite = pokemonDataHelper?.sprite ?? '';
-	const types = pokemonDataHelper?.types ?? [];
-
 	return(
 		<Card
-		onClick={() => onSelect(data.name)}
+		onClick={onSelect}
 		>
 			<CardContent
 			className='flex gap-4 cursor-pointer'
 			>
 				<img 
-				src={sprite}
+				src={data.sprite}
 				alt={data.name}
 				className='aspect-square w-15'
 				/>
@@ -106,12 +99,11 @@ function BuiltMonItem(
 					<p className="font-bold text-md">{title(data.name)}</p>
 					<span className="flex gap-4">
 						{
-							types.map(( type, index ) => {
-								console.log(type)
+							data.types.map((type, index) => {
 								return(
 									<p
 									key={index}
-									>{type}</p>
+									>{title(type.type.name)}</p>
 								)
 							})
 						}

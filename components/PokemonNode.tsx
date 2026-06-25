@@ -1,7 +1,7 @@
 "use client";
 import Image from 'next/image';
 import { Badge } from './ui/badge';
-import { useRef, useMemo, memo, useCallback } from 'react';
+import { useEffect, useRef, useMemo, memo, useCallback } from 'react';
 import { NodeProps, Node, Handle, Position } from '@xyflow/react';
 import { Volume2 } from 'lucide-react';
 import { Input } from './ui/input';
@@ -46,10 +46,15 @@ const PokemonNode = memo(function PokemonNode({
   const nature = useMemo(() => pokemonData?.nature ?? 'sassy', [pokemonData]);
   const level = useMemo(() => pokemonData?.level ?? 100, [pokemonData]);
 
-  const selectedNatureObj = useMemo(
-    () => natures.find(n => n.name === nature) ?? null,
-    [nature]
-  );
+	useEffect(() => {
+		const current = usePokemonDataStore.getState().pokemon[id];
+		if (current && !current.sprite) {
+			updatePokemonData(id, {
+				sprite: data.sprites.front_default,
+				types: data.types,
+			});
+		}
+	}, [id, data.sprites.front_default, data.types, updatePokemonData]);
 
   const handleCryClick = useCallback(() => {
     audioRef.current?.play();

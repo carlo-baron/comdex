@@ -1,4 +1,6 @@
 "use client";
+
+import BuiltMonsDialog from "./BuiltMonsDialog";
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -29,6 +31,7 @@ export default function DamageCalcDialog(
     onOpenChange: () => void;
   }
 ){
+	const [addMon, setAddMon] = useState(false);
   const [gameType, setGameType] = useState<GameType>('Doubles');
   const [terrain, setTerrain] = useState<Terrain | null>(null);
   const [weather, setWeather] = useState<Weather | null>(null);
@@ -186,12 +189,17 @@ export default function DamageCalcDialog(
 							<Button
 							variant='outline'
 							className='w-full h-full'
+							onClick={() => setAddMon(true)}
 							>
 								<Plus size={98}/>
 							</Button>
 						</div>
           </div>
         </div>
+				<BuiltMonsDialog 
+				open={addMon}
+				onOpenChange={() => setAddMon(true)}
+				/>
       </DialogContent>
     </Dialog>
   );

@@ -23,7 +23,7 @@ type PokemonMoveType = {
 	}
 }
 
-type PokemonTypeType = {
+export type PokemonTypeType = {
 	type: {
 		name: string,
 	}

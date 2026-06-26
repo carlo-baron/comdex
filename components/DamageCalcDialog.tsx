@@ -16,6 +16,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { usePokemonDataStore } from '@/hooks/PokemonDataStore';
 
 import {
@@ -27,6 +34,8 @@ import {
 type CalcSlot = 'attacker' | 'defender';
 
 const gen = Generations.get(9);
+
+const boostOptions = [6, 5, 4, 3, 2, 1, 0, -1, -2, -3, -4, -5, -6];
 
 function toCalcStats(stats: Record<string, number>): Partial<StatsTable> {
   return {
@@ -55,23 +64,23 @@ export default function DamageCalcDialog(
   const [defenderId, setDefenderId] = useState<string | null>(null);
   const [attackerMove, setAttackerMove] = useState<string | null>(null);
 
+  const [atkBoost, setAtkBoost] = useState<number>(0);
+  const [spaBoost, setSpaBoost] = useState<number>(0);
+  const [defBoost, setDefBoost] = useState<number>(0);
+  const [spdBoost, setSpdBoost] = useState<number>(0);
+
   const attacker = usePokemonDataStore(state => attackerId ? state.pokemon[attackerId] : null);
   const defender = usePokemonDataStore(state => defenderId ? state.pokemon[defenderId] : null);
 
   const [gameType, setGameType] = useState<GameType>('Doubles');
   const [terrain, setTerrain] = useState<Terrain | null>(null);
   const [weather, setWeather] = useState<Weather | null>(null);
-  const [spikes, setSpikes] = useState<number>(0);
   const [isFairyAura, setIsFairyAura] = useState(false);
   const [isGravity, setIsGravity] = useState(false);
   const [isProtected, setIsProtected] = useState(false);
   const [isHelpingHand, setIsHelpingHand] = useState(false);
   const [isAuroraVeil, setIsAuroraVeil] = useState(false);
   const [screens, setScreens] = useState<string[]>([]);
-  const [isTailwind, setIsTailwind] = useState(false);
-  const [isFriendGuard, setIsFriendGuard] = useState(false);
-  const [isStealthRock, setIsStealthRock] = useState(false);
-  const [isSaltCure, setIsSaltCure] = useState(false);
 
   const resultText: string = useMemo(() => {
     if (!attackerMove || !attacker || !defender) return '';
@@ -84,6 +93,7 @@ export default function DamageCalcDialog(
         level: attacker.level,
         evs: toCalcStats(attacker.evs),
         ivs: toCalcStats(attacker.ivs),
+        boosts: { atk: atkBoost, spa: spaBoost },
       }),
       new Pokemon(gen, defender.name, {
         item: defender.selectedItem?.name ?? undefined,
@@ -91,6 +101,7 @@ export default function DamageCalcDialog(
         level: defender.level,
         evs: toCalcStats(defender.evs),
         ivs: toCalcStats(defender.ivs),
+        boosts: { def: defBoost, spd: spdBoost },
       }),
       new Move(gen, attackerMove),
       new Field({
@@ -101,17 +112,12 @@ export default function DamageCalcDialog(
         isFairyAura,
         attackerSide: {
           isHelpingHand,
-          isTailwind,
-          isFriendGuard,
         },
         defenderSide: {
-          spikes,
           isProtected,
           isAuroraVeil,
           isReflect: screens.includes('reflect'),
           isLightScreen: screens.includes('light-screen'),
-          isSR: isStealthRock,
-          isSaltCured: isSaltCure,
         },
       })
     );
@@ -134,7 +140,7 @@ export default function DamageCalcDialog(
     ).toFixed(1);
 
     if (maxDamage === 0) {
-      return `0% damage (${result.desc()})`;
+      return 'No damage (blocked or immune)';
     }
 
     let koText = '';
@@ -155,14 +161,13 @@ export default function DamageCalcDialog(
     isGravity,
     isFairyAura,
     isHelpingHand,
-    isTailwind,
-    isFriendGuard,
-    spikes,
     isProtected,
     isAuroraVeil,
     screens,
-    isStealthRock,
-    isSaltCure,
+    atkBoost,
+    spaBoost,
+    defBoost,
+    spdBoost,
   ]);
 
   const handleOpenAddMon = useCallback((slot: CalcSlot) => {
@@ -182,7 +187,29 @@ export default function DamageCalcDialog(
     setAttackerId(defenderId);
     setDefenderId(attackerId);
     setAttackerMove(null);
-  }, [attackerId, defenderId]);
+    setAtkBoost(defBoost === defBoost ? atkBoost : atkBoost);
+  }, [attackerId, defenderId, atkBoost, defBoost]);
+
+  const renderBoostSelect = (label: string, value: number, onChange: (val: number) => void) => (
+    <div className="flex items-center gap-2">
+      <p className="text-xs w-10">{label}</p>
+      <Select
+        value={value.toString()}
+        onValueChange={(val) => onChange(Number(val))}
+      >
+        <SelectTrigger className="w-16 h-8 text-xs">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {boostOptions.map((b) => (
+            <SelectItem key={b} value={b.toString()}>
+              {b > 0 ? `+${b}` : b}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
 
   const renderMonSlot = (slot: CalcSlot, id: string | null, mon: typeof attacker) => {
     if (!id || !mon) {
@@ -224,6 +251,20 @@ export default function DamageCalcDialog(
         <div className="text-xs text-muted-foreground text-center">
           Lv.{mon.level} {mon.nature}
         </div>
+
+        {slot === 'attacker' && (
+          <div className="flex flex-col gap-1 w-full mt-1">
+            {renderBoostSelect('Atk', atkBoost, setAtkBoost)}
+            {renderBoostSelect('SpA', spaBoost, setSpaBoost)}
+          </div>
+        )}
+        {slot === 'defender' && (
+          <div className="flex flex-col gap-1 w-full mt-1">
+            {renderBoostSelect('Def', defBoost, setDefBoost)}
+            {renderBoostSelect('SpD', spdBoost, setSpdBoost)}
+          </div>
+        )}
+
         {slot === 'attacker' && (
           <ToggleGroup
             variant='outline'
@@ -357,40 +398,6 @@ export default function DamageCalcDialog(
               <ToggleGroupItem value='reflect'>Reflect</ToggleGroupItem>
               <ToggleGroupItem value='light-screen'>Light Screen</ToggleGroupItem>
             </ToggleGroup>
-            <Toggle 
-            variant='outline'
-            pressed={isTailwind}
-            onPressedChange={setIsTailwind}
-            >Tailwind</Toggle>
-            <Toggle 
-            variant='outline'
-            pressed={isFriendGuard}
-            onPressedChange={setIsFriendGuard}
-            >Friend Guard</Toggle>
-            <Toggle 
-            variant='outline'
-            pressed={isStealthRock}
-            onPressedChange={setIsStealthRock}
-            >Stealth Rock</Toggle>
-            <ToggleGroup
-            variant='outline'
-            type='single'
-            value={spikes.toString()}
-            onValueChange={(val) => {
-              if(!val) setSpikes(0);
-              else setSpikes(Number(val));
-            }}
-            >
-              <ToggleGroupItem value='0'>0</ToggleGroupItem>
-              <ToggleGroupItem value='1'>1</ToggleGroupItem>
-              <ToggleGroupItem value='2'>2</ToggleGroupItem>
-              <ToggleGroupItem value='3'>3 spikes</ToggleGroupItem>
-            </ToggleGroup>
-            <Toggle 
-            variant='outline'
-            pressed={isSaltCure}
-            onPressedChange={setIsSaltCure}
-            >Salt Cure</Toggle>
           </div>
 
           <div className="flex flex-col items-center justify-center">

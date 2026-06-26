@@ -3,10 +3,15 @@ import { persist } from 'zustand/middleware';
 import { NatureName } from '@/data/natures';
 import { MoveType } from '@/types/moves';
 import { ItemType } from '@/types/items';
-import { AbilityEntryType } from '@/types/pokemon';
+import { 
+	AbilityEntryType,
+	PokemonTypeType
+} from '@/types/pokemon';
 
 export type PokemonData = {
 	name: string;
+	sprite: string;
+	types: PokemonTypeType[];
   level: number;
   nature: NatureName;
   evs: Record<string, number>;
@@ -18,6 +23,8 @@ export type PokemonData = {
 
 const defaultPokemonData = (): PokemonData => ({
 	name: 'pikachu',
+	sprite: '',
+	types: [{type: { name: 'electric' }}],
   level: 50,
   nature: 'sassy',
   evs: {

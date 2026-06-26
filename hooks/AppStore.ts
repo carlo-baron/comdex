@@ -10,7 +10,7 @@ import {
 
 import { NatureName } from '@/data/natures';
 import {
-	PokemonStatType,
+	type PokemonStatType,
 	type PokemonType,
 } from '@/types/pokemon';
 
@@ -45,6 +45,8 @@ export const useNodeStore = create<NodeStore>()(
 
 				usePokemonDataStore.getState().initPokemon(id);
 				usePokemonDataStore.getState().updatePokemon(id, { name: pokemon.name });
+				usePokemonDataStore.getState().updatePokemon(id, { types: pokemon.types });
+				usePokemonDataStore.getState().updatePokemon(id, { sprite: pokemon.sprites.front_default });
 
 				set(state => ({
 					nodes: [

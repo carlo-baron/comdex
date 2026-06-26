@@ -122,12 +122,12 @@ export default function DamageCalcDialog(
       })
     );
 
-    const damage = Array.isArray(result.damage)
-      ? result.damage
-      : [result.damage];
+		const damage: number[] = Array.isArray(result.damage)
+			? (result.damage as (number | number[])[]).flat()
+			: [result.damage];
 
-    const minDamage = Math.min(...damage);
-    const maxDamage = Math.max(...damage);
+			const minDamage = Math.min(...damage);
+			const maxDamage = Math.max(...damage);
 
     const minPercent = (
       (minDamage / result.defender.stats.hp) *

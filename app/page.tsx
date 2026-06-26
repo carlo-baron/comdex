@@ -1,8 +1,10 @@
 "use client";
+
+import DamageCalcDialog from '@/components/DamageCalcDialog';
 import { title } from '@/utils/titleCase';
 import { Button } from '@/components/ui/button';
 import { useState, useCallback, useEffect } from 'react';
-import { Plus, Trash, Clipboard } from 'lucide-react';
+import { Plus, Trash, Clipboard, Calculator } from 'lucide-react';
 import {
   ReactFlow,
   Background,
@@ -47,6 +49,7 @@ const nodeTypes = {
 };
 
 export default function Page() {
+	const [calc, setCalc] = useState<boolean>(false);
 	const [selectedNodes, setSelectedNodes] = useState<AppNode[]>([]);
 	const { deleteElements, screenToFlowPosition } = useReactFlow();
   const [addMon, setAddMon] = useState(false);
@@ -159,6 +162,15 @@ export default function Page() {
 							<Plus />
 						</Button>
 
+						<Button onClick={() => setCalc(true)}>
+							Calc	
+							<Calculator />
+						</Button>
+						<DamageCalcDialog 
+						open={calc}
+						onOpenChange={() => setCalc(prev => !prev)}
+						/>
+						
 						{
 							selectedNodes.length > 0 && (
 								<Button
